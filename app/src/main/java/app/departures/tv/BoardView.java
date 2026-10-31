@@ -30,6 +30,7 @@ public final class BoardView extends View {
     private final Paint split = new Paint();
     private final Paint glyph = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Rect bounds = new Rect();
+    private final RectF cell = new RectF();   // reused for every bit: no per-frame allocations during a flip
     private Board shown = new Board(), target = new Board();
     private final long[] flipStart = new long[Board.ROWS * Board.COLS];
     private final int[] flipFrom = new int[Board.ROWS * Board.COLS];
@@ -108,7 +109,7 @@ public final class BoardView extends View {
                         else { ch = Board.flapAt(flipFrom[i] + step * Math.max(1, Math.floorMod(Board.flapIndex(target.cells[i]) - flipFrom[i], Board.flapCount()) / Math.max(1, flipSteps[i]))); still = false; }
                     }
                 }
-                RectF rect = new RectF(x + 1, y, x + bitW - gap - 1, y + bitH);
+                RectF rect = cell; rect.set(x + 1, y, x + bitW - gap - 1, y + bitH);
                 if (Board.isChip(ch)) {
                     tile.setColor(blend(Board.chipColour(ch), dim));
                     c.drawRoundRect(rect, radius, radius, tile);
@@ -139,7 +140,7 @@ public final class BoardView extends View {
 
     /** Simple flat icons in the bit: a sun, a cloud, a cloud with drops, a snowflake. */
     private void weatherIcon(Canvas c, char ch, RectF r, float k) {
-        float cx = r.centerX(), cy = r.centerY(), s = Math.min(r.width(), r.height()) * 0.42f;
+        float cx = r.centerX(), cy = r.centerY(), s = Math.min(r.width(), r.height()) * 0.62f;
         icon.setStyle(Paint.Style.FILL);
         if (ch == Board.WX_SUN) {
             icon.setColor(blend(0xFFF1C426, k)); icon.setStrokeWidth(s * 0.18f);
