@@ -54,7 +54,7 @@ public final class SettingsActivity extends Activity {
         list = new ListView(this); list.setDividerHeight(dp(1)); list.setSelector(new android.graphics.drawable.ColorDrawable(0x22FFFFFF));
         root.addView(list, new LinearLayout.LayoutParams(-1, 0, 1f));
         TextView hint = new TextView(this); hint.setTextColor(0xFF666666); hint.setTextSize(14); hint.setPadding(0, dp(12), 0, 0);
-        hint.setText("Each view shows for the time set, then the next one. Off removes it from the rotation. Up/Down choose a row, OK or Left/Right change it, Back leaves. These settings also apply to the screensaver.");
+        hint.setText("Press Back to save. Changes also apply to the screensaver mode. Make sure the TV's screensaver settings are adjusted accordingly.");
         root.addView(hint);
         setContentView(root);
         buildRows();
@@ -73,7 +73,7 @@ public final class SettingsActivity extends Activity {
         });
         list.setOnItemClickListener((p, v, pos, id) -> { rows.get(pos).step(1); refresh(); });
         list.requestFocus();
-        list.setSelection(1);
+        list.setSelectionFromTop(1, dp(56));   // first real row selected, the VIEWS heading still visible above it
     }
 
     private static final class Heading extends Row { Heading(String t) { super(t); } String value() { return ""; } void step(int d) {} }
