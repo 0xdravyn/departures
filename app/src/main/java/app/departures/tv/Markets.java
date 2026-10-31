@@ -19,7 +19,7 @@ import java.util.List;
  */
 final class Markets {
     /** state: "OPEN" during a regular session, "CLOSED" otherwise (pre- and after-hours count as closed), null for crypto. */
-    static final class Quote { String label; double price; double changePct; boolean ok; String state; }
+    static final class Quote { String label, key; double price; double changePct; boolean ok; String state; }
     private static final long FRESH_MS = 10 * 60_000L;
 
     static List<Quote> load(Context ctx, Config cfg, boolean allowNetwork) {
@@ -32,7 +32,7 @@ final class Markets {
         JSONObject gecko = geckoPrices(cfg);
         boolean any = false;
         for (Config.Market m : cfg.markets) {
-            Quote q = new Quote(); q.label = m.label;
+            Quote q = new Quote(); q.label = m.label; q.key = m.source + ":" + m.symbol;
             if (m.source.equals("coingecko")) {
                 JSONObject c = gecko == null ? null : gecko.optJSONObject(m.symbol.toLowerCase());
                 if (c != null && c.has("usd")) { q.price = c.optDouble("usd"); q.changePct = c.optDouble("usd_24h_change", 0); q.ok = true; }
@@ -40,14 +40,14 @@ final class Markets {
                 double[] p = yahoo(m.symbol);
                 if (p != null) { q.price = p[0]; q.changePct = p[1]; q.ok = true; q.state = p[2] == 1 ? "OPEN" : "CLOSED"; }
             }
-            if (!q.ok && cached != null) for (Quote old : cached) if (old.label.equals(q.label) && old.ok) { q = old; break; }
+            if (!q.ok && cached != null) for (Quote old : cached) if (q.key.equals(old.key) && old.ok) { q = old; break; }
             any |= q.ok;
             out.add(q);
         }
         if (any) {
             try {
                 JSONArray arr = new JSONArray();
-                for (Quote q : out) arr.put(new JSONObject().put("label", q.label).put("price", q.price).put("change", q.changePct).put("ok", q.ok).put("state", q.state == null ? JSONObject.NULL : q.state));
+                for (Quote q : out) arr.put(new JSONObject().put("label", q.label).put("key", q.key).put("price", q.price).put("change", q.changePct).put("ok", q.ok).put("state", q.state == null ? JSONObject.NULL : q.state));
                 Files.write(cache.toPath(), arr.toString().getBytes(StandardCharsets.UTF_8));
             } catch (Exception ignored) {}
         }
@@ -93,10 +93,11 @@ final class Markets {
         try {
             JSONArray arr = new JSONArray(new String(Files.readAllBytes(cache.toPath()), StandardCharsets.UTF_8));
             List<Quote> out = new ArrayList<>();
-            for (int i = 0; i < arr.length(); i++) { JSONObject o = arr.getJSONObject(i); Quote q = new Quote(); q.label = o.getString("label"); q.price = o.getDouble("price"); q.changePct = o.getDouble("change"); q.ok = o.optBoolean("ok", true); q.state = o.isNull("state") ? null : o.optString("state"); out.add(q); }
-            // the cache only counts if it is for the same list of labels
+            for (int i = 0; i < arr.length(); i++) { JSONObject o = arr.getJSONObject(i); Quote q = new Quote(); q.label = o.getString("label"); q.key = o.optString("key", ""); q.price = o.getDouble("price"); q.changePct = o.getDouble("change"); q.ok = o.optBoolean("ok", true); q.state = o.isNull("state") ? null : o.optString("state"); out.add(q); }
+            // the cache only counts for the same list of assets (source and symbol, not the label: a renamed or
+            // re-pointed entry must fetch afresh)
             if (out.size() != cfg.markets.size()) return null;
-            for (int i = 0; i < out.size(); i++) if (!out.get(i).label.equals(cfg.markets.get(i).label)) return null;
+            for (int i = 0; i < out.size(); i++) { Config.Market mk = cfg.markets.get(i); if (!out.get(i).key.equals(mk.source + ":" + mk.symbol)) return null; out.get(i).label = mk.label; }
             return out;
         } catch (Exception e) { return null; }
     }
