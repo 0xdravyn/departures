@@ -45,7 +45,7 @@ public final class Config {
     public static Config load(Context ctx) {
         Config c = new Config();
         File f = new File(ctx.getFilesDir(), "config.json");
-        if (!f.exists()) return c;
+        if (!f.exists()) { c.markets.addAll(DEFAULT_MARKETS); return overlay(ctx, c); }
         try {
             JSONObject o = new JSONObject(new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8));
             JSONObject loc = o.optJSONObject("location");
@@ -72,7 +72,11 @@ public final class Config {
         } catch (Exception e) {
             android.util.Log.w("Departures", "config.json unreadable: " + e.getClass().getSimpleName());
         }
-        // Choices made on the TV itself (SettingsActivity) win over config.json; both the app and the screensaver read them.
+        return overlay(ctx, c);
+    }
+
+    /** Choices made on the TV itself (SettingsActivity) win over config.json; both the app and the screensaver read them. */
+    private static Config overlay(Context ctx, Config c) {
         android.content.SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         c.nowOn = p.getBoolean("now_on", true); c.keepWatchingOn = p.getBoolean("keep_watching_on", true); c.marketsOn = p.getBoolean("markets_on", true);
         c.nowSeconds = p.getInt("now_seconds", c.nowSeconds);

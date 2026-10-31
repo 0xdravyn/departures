@@ -34,6 +34,6 @@ final class FaceCycle {
     Board board(Data data, Config cfg, long now) {
         if (face == KEEP_WATCHING && data.resume != null) return Faces.keepWatching(data.resume);
         if (face == MARKETS && (hasQuotes(data) || !cfg.nowOn)) return Faces.markets(data.quotes, now, cfg.clock24);
-        return Faces.now(now, cfg.clock24, data.weather, data.nextEvent(now));
+        return Faces.now(now, cfg.clock24, data.weather, data.nextEvent(now), cfg.hasLocation(), !cfg.calendars.isEmpty());
     }
 }

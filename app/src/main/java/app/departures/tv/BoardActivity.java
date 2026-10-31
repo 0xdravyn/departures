@@ -50,7 +50,7 @@ public final class BoardActivity extends Activity implements Data.Listener {
         // Demo mode (adb shell am start -n app.departures.tv/.BoardActivity --ez demo true): sample data only,
         // for screenshots and documentation that must not show anyone's real calendar.
         boolean demo = getIntent() != null && getIntent().getBooleanExtra("demo", false);
-        if (cfg.present && !demo) { data = new Data(this, cfg, this); view.setBoard(Faces.now(System.currentTimeMillis(), cfg.clock24, null, null)); data.start(); }
+        if (!demo) { data = new Data(this, cfg, this); view.setBoard(Faces.now(System.currentTimeMillis(), cfg.clock24, null, null, cfg.hasLocation(), !cfg.calendars.isEmpty())); data.start(); }
         else view.setBoard(sample());
         applyQuiet();
         ui.postDelayed(rotate, cycle.delayMs(cfg));

@@ -15,7 +15,10 @@ public final class Faces {
     public static final class Resume { public String title = "", detail = "", app = ""; }
 
     /** Row 1 date and time; rows 2 and 3 weather; rows 5 and 6 the next event with its countdown. */
-    public static Board now(long nowMs, boolean clock24, Weather w, Event e) {
+    public static Board now(long nowMs, boolean clock24, Weather w, Event e) { return now(nowMs, clock24, w, e, true, true); }
+
+    /** hasLocation / hasCalendars false: a plain hint in place of the missing rows, for a TV with no configuration yet. */
+    public static Board now(long nowMs, boolean clock24, Weather w, Event e, boolean hasLocation, boolean hasCalendars) {
         Board b = new Board();
         Date d = new Date(nowMs);
         String date = new SimpleDateFormat("EEE d MMM", Locale.US).format(d).toUpperCase(Locale.US);
@@ -31,7 +34,12 @@ public final class Faces {
             b.text(2, 0, hl);
             if (w.rain) b.textRight(2, "RAIN");
         }
-        if (e != null) {
+        if (w == null && !hasLocation) { b.text(1, 0, "WEATHER: SET LOCATION"); b.text(2, 0, "IN CONFIG.JSON"); }
+        if (e == null && !hasCalendars) {
+            b.chip(4, 0, Board.CHIP_BLUE); b.chip(5, 0, Board.CHIP_BLUE);
+            b.text(4, 1, "ADD A CALENDAR LINK");
+            b.text(5, 1, "SEE THE README");
+        } else if (e != null) {
             b.chip(4, 0, Board.CHIP_BLUE); b.chip(5, 0, Board.CHIP_BLUE);
             b.text(4, 1, fit(e.title, Board.COLS - 1));
             // Row 6: the time and countdown on the left, the calendar label on the right, never overlapping:

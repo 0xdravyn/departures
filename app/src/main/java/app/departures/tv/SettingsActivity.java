@@ -138,7 +138,13 @@ public final class SettingsActivity extends Activity {
                 String cur = android.provider.Settings.Secure.getString(getContentResolver(), "screensaver_components");
                 boolean ours = cur != null && cur.contains("app.departures.tv");
                 if (ours) { String prev = prefs.getString("previous_screensaver", ""); android.provider.Settings.Secure.putString(getContentResolver(), "screensaver_components", prev.isEmpty() ? "com.google.android.apps.tv.dreamx/.service.Backdrop" : prev); }
-                else { if (cur != null && !cur.isEmpty()) prefs.edit().putString("previous_screensaver", cur).apply(); android.provider.Settings.Secure.putString(getContentResolver(), "screensaver_components", "app.departures.tv/.DeparturesDream"); android.provider.Settings.Secure.putInt(getContentResolver(), "screensaver_enabled", 1); }
+                else {
+                    if (cur != null && !cur.isEmpty()) prefs.edit().putString("previous_screensaver", cur).apply();
+                    android.provider.Settings.Secure.putString(getContentResolver(), "screensaver_components", "app.departures.tv/.DeparturesDream");
+                    android.provider.Settings.Secure.putInt(getContentResolver(), "screensaver_enabled", 1);
+                    // a sensible start: two minutes idle, unless the TV is already quicker
+                    try { if (canSystem() && android.provider.Settings.System.getInt(getContentResolver(), android.provider.Settings.System.SCREEN_OFF_TIMEOUT) > 120000) android.provider.Settings.System.putInt(getContentResolver(), android.provider.Settings.System.SCREEN_OFF_TIMEOUT, 120000); } catch (Exception ignored) {}
+                }
             }
         });
         rows.add(new Row("Start after the TV idles for") {

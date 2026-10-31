@@ -37,8 +37,9 @@ Quiet hours dim the board at night. The screenshots are the app's demo mode, whi
 
 ## Two ways to run it
 
-- **As the screensaver** (the usual way): after the TV's idle timer, over Home or any app that is not playing. The TV's own sleep timer still applies afterwards, as with any screensaver.
-- **As an app, all day:** open Departures from the home screen. It holds the screen on and runs until you press Back, for a bar, a shop, a studio or a hallway. Some TVs add an "idle standby" that switches off after a few hours without a remote press whatever is running (Sony: Settings > System > Power > Idle TV standby); turn it off for all-day use.
+**1. As an app, whenever you want it.** Open Departures from your home screen. It holds the screen on and runs until you press Back. Nothing to set up beyond the configuration. For a bar, a shop, a studio or a hallway: some TVs add an "idle standby" that switches off after a few hours without a remote press whatever is running (Sony: Settings > System > Power > Idle TV standby); turn it off for all-day use.
+
+**2. As the TV's screensaver.** Departures replaces the TV's built-in screensaver and starts on its own after the TV has sat idle, by default **2 minutes with no remote input**. Google TV's own Screen saver page does not list third-party screensavers, so this needs one ADB step the first time (the two permission grants in [Setup](#setup), step 5); after that, two rows in Departures' Settings control it from the remote: **TV screensaver** (Departures or the TV's default) and **Start after the TV idles for** (1 to 30 minutes). Switching Departures on sets the delay to 2 minutes unless the TV's is already shorter. Without the grants, the same two values can be set directly with the ADB commands in step 5. The TV's own sleep timer still applies afterwards, as with any screensaver.
 
 ## Settings on the TV
 
