@@ -36,6 +36,10 @@ public final class BoardView extends View {
     private final int[] flipSteps = new int[Board.ROWS * Board.COLS];
     private boolean animating;
     private float dim = 1f;
+    private boolean flips = true;
+
+    /** Off: changes appear at once, for anyone who finds the motion too much. */
+    public void setFlips(boolean on) { flips = on; }
 
     public BoardView(Context ctx) {
         super(ctx);
@@ -53,6 +57,7 @@ public final class BoardView extends View {
     /** Flips from the current board to this one. */
     public void flipTo(Board b) {
         if (b.equals(target)) return;
+        if (!flips) { setBoard(b); return; }
         long now = SystemClock.uptimeMillis();
         Board from = target.copy();   // flips that are still running start from where they were heading
         target = b.copy();

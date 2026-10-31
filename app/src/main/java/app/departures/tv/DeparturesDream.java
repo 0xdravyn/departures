@@ -19,7 +19,7 @@ public final class DeparturesDream extends DreamService implements Data.Listener
     private Data data;
 
     private final Runnable quotesMidView = () -> { if (cycle.face == FaceCycle.MARKETS && data != null) data.refreshQuotes(); };
-    private final Runnable rotate = new Runnable() { @Override public void run() { cycle.next(data, cfg.pinnedFace); show(true); if (cycle.face == FaceCycle.MARKETS) ui.postDelayed(quotesMidView, cycle.delayMs(cfg) / 2); ui.postDelayed(this, cycle.delayMs(cfg)); } };
+    private final Runnable rotate = new Runnable() { @Override public void run() { cycle.next(data, cfg); show(true); if (cycle.face == FaceCycle.MARKETS) ui.postDelayed(quotesMidView, cycle.delayMs(cfg) / 2); ui.postDelayed(this, cycle.delayMs(cfg)); } };
     private final Runnable minute = new Runnable() { @Override public void run() { if (cycle.face != FaceCycle.KEEP_WATCHING) show(true); applyQuiet(); ui.postDelayed(this, msToNextMinute()); } };
 
     @Override public void onAttachedToWindow() {
@@ -27,10 +27,12 @@ public final class DeparturesDream extends DreamService implements Data.Listener
         setInteractive(false); setFullscreen(true); setScreenBright(true);
         cfg = Config.load(this);
         view = new BoardView(this);
+        view.setFlips(cfg.flips);
         setContentView(view);
         view.setBoard(Faces.now(System.currentTimeMillis(), cfg.clock24, null, null));
         applyQuiet();
         data = new Data(this, cfg, this);
+        if (!cfg.nowOn) cycle.next(data, cfg);   // Now switched off in settings: start on a view that is on
         data.start();
         ui.postDelayed(rotate, cycle.delayMs(cfg));
         ui.postDelayed(minute, msToNextMinute());
@@ -44,7 +46,7 @@ public final class DeparturesDream extends DreamService implements Data.Listener
 
     private void applyQuiet() {
         Calendar c = Calendar.getInstance();
-        view.setDim(cfg.quiet(c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE)) ? cfg.quietDim : 1f);
+        view.setDim(cfg.quiet(c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE)) ? Math.min(cfg.quietDim, cfg.brightness) : cfg.brightness);
     }
 
     static long msToNextMinute() { long now = System.currentTimeMillis(); return 60_000L - (now % 60_000L) + 50; }

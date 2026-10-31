@@ -42,7 +42,7 @@ Quiet hours dim the board at night. The screenshots are the app's demo mode, whi
 
 ## Settings on the TV
 
-Hold OK on the board (or press the remote's Menu button), or go to the TV's Settings > Screen saver > Departures. With the remote you can pin one face instead of cycling (Markets only for a shop, Now only for a hallway), set how long each face stays, switch the clock between 12 and 24 hours, Celsius and Fahrenheit, and turn quiet hours on or off. The app and the screensaver share these settings. What needs typing (your coordinates, calendar addresses, the market list) lives in `config.json`.
+Hold OK on the board (or press the remote's Menu button), or go to the TV's Settings > Screen saver > Departures. One row per view: how long it stays before the next, or Off to drop it from the rotation (Markets only for a shop, Now only for a hallway; the last view on cannot be switched off). Also the flip animation, board brightness, 12 or 24-hour clock, Celsius or Fahrenheit, and quiet hours with their start and end. A three-second reminder at every app launch says how to get here. The app and the screensaver share these settings. What needs typing (your coordinates, calendar addresses, the market list) lives in `config.json`.
 
 ## Setup
 

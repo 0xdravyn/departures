@@ -30,9 +30,12 @@ public final class Config {
     public static final class Market { public final String label, source, symbol; Market(String l, String s, String y) { label = l; source = s; symbol = y; } }
     public final List<Market> markets = new ArrayList<>();
     public boolean present;
-    /** -1 cycles the faces; 0, 1 or 2 pins one (FaceCycle.NOW, KEEP_WATCHING, MARKETS). Set on the TV. */
-    public int pinnedFace = -1;
+    /** Which views are in the rotation (settings on the TV). At least one stays on; Settings enforces it. */
+    public boolean nowOn = true, keepWatchingOn = true, marketsOn = true;
     public boolean quietEnabled = true;
+    /** Overall brightness of the board outside quiet hours, 0.4 to 1. */
+    public float brightness = 1f;
+    public boolean flips = true;
     static final String PREFS = "settings";
     /** The public defaults when the config has no "markets" key at all; an empty list in the config turns the face off. */
     static final List<Market> DEFAULT_MARKETS = List.of(new Market("S&P 500", "yahoo", "^GSPC"), new Market("NVIDIA", "yahoo", "NVDA"), new Market("BITCOIN", "coingecko", "bitcoin"), new Market("GOLD", "yahoo", "GC=F"));
@@ -71,13 +74,16 @@ public final class Config {
         }
         // Choices made on the TV itself (SettingsActivity) win over config.json; both the app and the screensaver read them.
         android.content.SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        c.pinnedFace = p.getInt("pinned_face", -1);
+        c.nowOn = p.getBoolean("now_on", true); c.keepWatchingOn = p.getBoolean("keep_watching_on", true); c.marketsOn = p.getBoolean("markets_on", true);
         c.nowSeconds = p.getInt("now_seconds", c.nowSeconds);
         c.keepWatchingSeconds = p.getInt("keep_watching_seconds", c.keepWatchingSeconds);
         c.marketsSeconds = p.getInt("markets_seconds", c.marketsSeconds);
         if (p.contains("clock24")) c.clock24 = p.getBoolean("clock24", c.clock24);
         if (p.contains("imperial")) c.imperial = p.getBoolean("imperial", c.imperial);
         c.quietEnabled = p.getBoolean("quiet_enabled", true);
+        c.quietFromMin = p.getInt("quiet_from", c.quietFromMin); c.quietToMin = p.getInt("quiet_to", c.quietToMin);
+        c.brightness = Math.max(0.4f, Math.min(1f, p.getFloat("brightness", 1f)));
+        c.flips = p.getBoolean("flips", true);
         return c;
     }
 
@@ -121,6 +127,9 @@ public final class Config {
         if (s.equals(lower) && lower.matches("[a-z0-9-]+")) return new Market(s.toUpperCase(java.util.Locale.US), "coingecko", lower);
         return new Market(s.toUpperCase(java.util.Locale.US), "yahoo", s.toUpperCase(java.util.Locale.US));
     }
+
+    public boolean viewOn(int face) { return face == 0 ? nowOn : face == 1 ? keepWatchingOn : marketsOn; }
+    public int viewsOn() { return (nowOn ? 1 : 0) + (keepWatchingOn ? 1 : 0) + (marketsOn ? 1 : 0); }
 
     public boolean hasLocation() { return !Double.isNaN(latitude) && !Double.isNaN(longitude); }
 

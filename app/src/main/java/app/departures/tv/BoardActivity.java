@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.WindowManager;
 
 import java.util.Calendar;
@@ -29,7 +30,7 @@ public final class BoardActivity extends Activity implements Data.Listener {
 
     private final Runnable rotate = new Runnable() {
         @Override public void run() {
-            if (System.currentTimeMillis() >= manualUntil) { if (data != null) cycle.next(data, cfg.pinnedFace); else cycle.set((cycle.face + 1) % 3); show(true); if (cycle.face == FaceCycle.MARKETS && data != null) ui.postDelayed(() -> { if (cycle.face == FaceCycle.MARKETS) data.refreshQuotes(); }, cycle.delayMs(cfg) / 2); }
+            if (System.currentTimeMillis() >= manualUntil) { if (data != null) cycle.next(data, cfg); else cycle.set(nextOn(cycle.face)); show(true); if (cycle.face == FaceCycle.MARKETS && data != null) ui.postDelayed(() -> { if (cycle.face == FaceCycle.MARKETS) data.refreshQuotes(); }, cycle.delayMs(cfg) / 2); }
             ui.postDelayed(this, cycle.delayMs(cfg));
         }
     };
@@ -38,9 +39,14 @@ public final class BoardActivity extends Activity implements Data.Listener {
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        view = new BoardView(this);
-        setContentView(view);
         cfg = Config.load(this);
+        view = new BoardView(this);
+        view.setFlips(cfg.flips);
+        android.widget.FrameLayout root = new android.widget.FrameLayout(this);
+        root.addView(view, new android.widget.FrameLayout.LayoutParams(-1, -1));
+        root.addView(hintView(), new android.widget.FrameLayout.LayoutParams(-1, -1));
+        setContentView(root);
+        if (!cfg.nowOn) cycle.set(nextOn(FaceCycle.MARKETS));
         // Demo mode (adb shell am start -n app.departures.tv/.BoardActivity --ez demo true): sample data only,
         // for screenshots and documentation that must not show anyone's real calendar.
         boolean demo = getIntent() != null && getIntent().getBooleanExtra("demo", false);
@@ -69,14 +75,31 @@ public final class BoardActivity extends Activity implements Data.Listener {
 
     private void applyQuiet() {
         Calendar c = Calendar.getInstance();
-        view.setDim(cfg.quiet(c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE)) ? cfg.quietDim : 1f);
+        view.setDim(cfg.quiet(c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE)) ? Math.min(cfg.quietDim, cfg.brightness) : cfg.brightness);
     }
+
+    /** The next view that is switched on, after this one (wrapping); the same one if it is the only one on. */
+    private int nextOn(int from) { for (int i = 1; i <= 3; i++) { int f = (from + i) % 3; if (cfg.viewOn(f)) return f; } return from; }
+    private int prevOn(int from) { for (int i = 1; i <= 3; i++) { int f = ((from - i) % 3 + 3) % 3; if (cfg.viewOn(f)) return f; } return from; }
 
     private void manual(int delta) {
         manualUntil = System.currentTimeMillis() + MANUAL_PAUSE_MS;
-        cycle.set(((cycle.face + delta) % 3 + 3) % 3);
+        cycle.set(delta > 0 ? nextOn(cycle.face) : prevOn(cycle.face));
         show(true);
     }
+
+    /** "Hold OK on your remote for settings", over a dimmed board for three seconds at every launch; any key ends it early. */
+    private View hint;
+    private View hintView() {
+        android.widget.TextView t = new android.widget.TextView(this);
+        t.setText("Hold OK on your remote for settings");
+        t.setTextColor(0xFFF2EEE6); t.setTextSize(30); t.setTypeface(android.graphics.Typeface.DEFAULT_BOLD); t.setGravity(android.view.Gravity.CENTER);
+        t.setBackgroundColor(0x99000000);
+        hint = t;
+        ui.postDelayed(this::hideHint, 3000);
+        return t;
+    }
+    private void hideHint() { if (hint != null && hint.getVisibility() == View.VISIBLE) hint.animate().alpha(0f).setDuration(350).withEndAction(() -> hint.setVisibility(View.GONE)).start(); }
 
     @Override public boolean onKeyLongPress(int code, KeyEvent e) {
         if (code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) { openSettings(); return true; }
@@ -94,12 +117,13 @@ public final class BoardActivity extends Activity implements Data.Listener {
     @Override protected void onResume() {
         super.onResume();
         Config fresh = Config.load(this);
-        boolean changed = cfg != null && (fresh.pinnedFace != cfg.pinnedFace || fresh.clock24 != cfg.clock24 || fresh.quietEnabled != cfg.quietEnabled || fresh.nowSeconds != cfg.nowSeconds || fresh.marketsSeconds != cfg.marketsSeconds || fresh.keepWatchingSeconds != cfg.keepWatchingSeconds || fresh.imperial != cfg.imperial);
+        boolean changed = cfg != null && (fresh.nowOn != cfg.nowOn || fresh.keepWatchingOn != cfg.keepWatchingOn || fresh.marketsOn != cfg.marketsOn || fresh.clock24 != cfg.clock24 || fresh.quietEnabled != cfg.quietEnabled || fresh.quietFromMin != cfg.quietFromMin || fresh.quietToMin != cfg.quietToMin || fresh.brightness != cfg.brightness || fresh.flips != cfg.flips || fresh.nowSeconds != cfg.nowSeconds || fresh.marketsSeconds != cfg.marketsSeconds || fresh.keepWatchingSeconds != cfg.keepWatchingSeconds || fresh.imperial != cfg.imperial);
         cfg = fresh;
-        if (changed) { if (cfg.pinnedFace >= 0) cycle.set(cfg.pinnedFace); manualUntil = 0; applyQuiet(); show(true); }
+        if (changed) { view.setFlips(cfg.flips); if (!cfg.viewOn(cycle.face)) cycle.set(nextOn(cycle.face)); manualUntil = 0; applyQuiet(); show(true); }
     }
 
     @Override public boolean onKeyDown(int code, KeyEvent e) {
+        hideHint();
         switch (code) {
             case KeyEvent.KEYCODE_DPAD_RIGHT: manual(1); return true;
             case KeyEvent.KEYCODE_DPAD_LEFT: manual(-1); return true;
