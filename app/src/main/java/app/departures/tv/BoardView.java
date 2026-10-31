@@ -114,7 +114,9 @@ public final class BoardView extends View {
                         glyph.setColor(glyphColour);
                         String s = String.valueOf(ch);
                         glyph.getTextBounds(s, 0, 1, bounds);
-                        float baseline = y + bitH / 2f - (bounds.top + bounds.bottom) / 2f;
+                        // Centre each glyph in the bit, except the marks that live on the baseline: a centred
+                        // full stop or comma reads as a middle dot ("7,580" became "7 · 580").
+                        float baseline = (ch == '.' || ch == ',') ? y + bitH * 0.78f : y + bitH / 2f - (bounds.top + bounds.bottom) / 2f;
                         c.drawText(s, rect.centerX(), baseline, glyph);
                     }
                 }
