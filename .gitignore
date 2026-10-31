@@ -1,0 +1,16 @@
+# build output and local machine files
+build/
+.gradle/
+local.properties
+*.apk
+*.aab
+.DS_Store
+.idea/
+*.iml
+
+# anything private: configs with calendar links, keystores
+private/
+config.json
+*.jks
+*.keystore
+keystore.properties

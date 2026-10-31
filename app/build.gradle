@@ -1,0 +1,24 @@
+plugins { id 'com.android.application' }
+
+// Release signing: point DEPARTURES_KEYSTORE_PROPERTIES at a properties file (storeFile, storePassword,
+// keyAlias, keyPassword) kept outside the repository. Without it the release build signs with the debug key,
+// which is fine for your own TV.
+def ksFile = System.getenv('DEPARTURES_KEYSTORE_PROPERTIES')
+def ks = new Properties()
+if (ksFile && file(ksFile).exists()) file(ksFile).withInputStream { ks.load(it) }
+
+android {
+    namespace 'app.departures.tv'
+    compileSdk 34
+    buildFeatures { aidl false }
+    defaultConfig { applicationId 'app.departures.tv'; minSdk 26; targetSdk 34; versionCode 1; versionName '0.1.0' }
+    signingConfigs {
+        if (ks.storeFile) release { storeFile file(ks.storeFile); storePassword ks.storePassword; keyAlias ks.keyAlias; keyPassword ks.keyPassword }
+    }
+    buildTypes { release {
+        minifyEnabled true; shrinkResources true
+        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        signingConfig ks.storeFile ? signingConfigs.release : signingConfigs.debug
+    } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
