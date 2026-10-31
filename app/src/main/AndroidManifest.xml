@@ -1,8 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <uses-feature android:name="android.software.leanback" android:required="true" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_TV_LISTINGS" />
+    <!-- Optional, granted over ADB at setup (pm grant / appops): lets the Settings screen choose the screensaver and
+         the idle delay, because Google TV's own Screen saver page does not list third-party screensavers. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <!-- To name the app behind a Watch Next entry ("Netflix", not its package id): see other TV apps' labels. -->
     <queries><intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LEANBACK_LAUNCHER" /></intent></queries>
     <application android:allowBackup="false" android:label="@string/app_name" android:icon="@drawable/banner" android:banner="@drawable/banner"

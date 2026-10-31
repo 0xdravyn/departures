@@ -34,6 +34,7 @@ Verify
 - Read `adb logcat -d -s Departures` and explain any warning to me in plain words.
 
 Make it the screensaver
+- Grant the two settings permissions so the app's own Settings screen can control this later: `adb shell pm grant app.departures.tv android.permission.WRITE_SECURE_SETTINGS` and `adb shell appops set app.departures.tv WRITE_SETTINGS allow`. (Google TV's own Screen saver page does not list third-party screensavers.)
 - `adb shell settings put secure screensaver_components app.departures.tv/.DeparturesDream`, and tell me the TV's idle timer (`adb shell settings get system screen_off_timeout`, in milliseconds); offer to set it to 120000 for two minutes.
 - Start it once to prove it: `adb shell am start -n com.android.systemui/.Somnambulator`, wait 10 seconds, screenshot, then `adb shell input keyevent KEYCODE_HOME`.
 - Tell me to switch USB debugging back off on the TV when we are done.

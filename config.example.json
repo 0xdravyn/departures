@@ -29,6 +29,7 @@
   "markets": [
     "S&P 500",
     "NVIDIA",
+    "GOOGLE",
     "bitcoin",
     "gold"
   ],

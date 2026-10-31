@@ -38,7 +38,7 @@ public final class Config {
     public boolean flips = true;
     static final String PREFS = "settings";
     /** The public defaults when the config has no "markets" key at all; an empty list in the config turns the face off. */
-    static final List<Market> DEFAULT_MARKETS = List.of(new Market("S&P 500", "yahoo", "^GSPC"), new Market("NVIDIA", "yahoo", "NVDA"), new Market("BITCOIN", "coingecko", "bitcoin"), new Market("GOLD", "yahoo", "GC=F"));
+    static final List<Market> DEFAULT_MARKETS = List.of(new Market("S&P 500", "yahoo", "^GSPC"), new Market("NVIDIA", "yahoo", "NVDA"), new Market("GOOGLE", "yahoo", "GOOGL"), new Market("BITCOIN", "coingecko", "bitcoin"), new Market("GOLD", "yahoo", "GC=F"));
     /** How far ahead the next-event rows look: 0 shows today only, 1 (default) falls back to tomorrow's first event once today is done. */
     public int lookaheadDays = 1;
 
@@ -64,7 +64,7 @@ public final class Config {
             JSONObject faces = o.optJSONObject("faces");
             if (faces != null) { c.nowSeconds = Math.max(10, faces.optInt("now_seconds", 60)); c.keepWatchingSeconds = Math.max(10, faces.optInt("keep_watching_seconds", faces.optInt("up_next_seconds", 30))); c.marketsSeconds = Math.max(10, faces.optInt("markets_seconds", 60)); }
             JSONArray mk = o.optJSONArray("markets");
-            if (mk != null) for (int i = 0; i < mk.length() && c.markets.size() < 4; i++) { Market m = market(mk.opt(i)); if (m != null) c.markets.add(m); }
+            if (mk != null) for (int i = 0; i < mk.length() && c.markets.size() < 5; i++) { Market m = market(mk.opt(i)); if (m != null) c.markets.add(m); }
             if (mk == null) c.markets.addAll(DEFAULT_MARKETS);
             JSONObject calo = o.optJSONObject("calendar");
             if (calo != null) c.lookaheadDays = Math.max(0, Math.min(14, calo.optInt("lookahead_days", 1)));

@@ -87,15 +87,14 @@ public final class Faces {
      */
     public static Board markets(List<Markets.Quote> quotes, long nowMs, boolean clock24) {
         Board b = new Board();
-        // Header, centred: MARKETS plus OPEN or CLOSED for the exchange-traded rows (crypto has no session);
-        // orange face chips at both ends. Footer, centred: the time of the board.
-        String state = null;
-        for (Markets.Quote q : quotes) if (q.ok && q.state != null) { state = q.state; break; }
-        b.textCenter(0, state == null ? "MARKETS" : "MARKETS " + state);
+        // Header, centred: MARKETS @ time of the board; orange face chips at both ends. No open/closed word: a list
+        // mixes exchange hours and crypto, which never closes. Then up to five rows.
+        String time = (clock24 ? new SimpleDateFormat("HH:mm", Locale.US) : new SimpleDateFormat("h:mma", Locale.US)).format(new Date(nowMs)).toUpperCase(Locale.US);
+        b.textCenter(0, "MARKETS @ " + time);
         b.chip(0, 0, Board.CHIP_ORANGE); b.chip(0, Board.COLS - 1, Board.CHIP_ORANGE);
         int row = 1;
         for (Markets.Quote q : quotes) {
-            if (row > 4) break;
+            if (row >= Board.ROWS) break;
             if (!q.ok) { b.text(row, 2, fit(q.label.toUpperCase(Locale.US), 8)); b.textRight(row, "NO DATA"); row++; continue; }
             b.chip(row, 0, q.changePct > 0.05 ? Board.CHIP_GREEN : q.changePct < -0.05 ? Board.CHIP_RED : Board.CHIP_WHITE);
             b.text(row, 2, fit(q.label.toUpperCase(Locale.US), 8));
@@ -104,8 +103,6 @@ public final class Faces {
             b.textRight(row, chg);
             row++;
         }
-        String time = (clock24 ? new SimpleDateFormat("HH:mm", Locale.US) : new SimpleDateFormat("h:mm a", Locale.US)).format(new Date(nowMs)).toUpperCase(Locale.US);
-        b.textCenter(5, time);
         return b;
     }
 
@@ -125,7 +122,7 @@ public final class Faces {
     public static Event sampleEvent(long nowMs) { Event e = new Event(); e.title = "Dinner with Sam"; e.label = "HOME"; e.startMs = nowMs + 72 * 60000L; e.endMs = e.startMs + 3600000L; return e; }
     public static List<Markets.Quote> sampleQuotes() {
         List<Markets.Quote> l = new java.util.ArrayList<>();
-        Object[][] s = {{"S&P 500", 7580.07, -0.57}, {"NVIDIA", 204.64, -3.0}, {"BITCOIN", 77499.0, 1.08}, {"GOLD", 3898.9, -0.4}};
+        Object[][] s = {{"S&P 500", 7580.07, -0.57}, {"NVIDIA", 204.64, -3.0}, {"GOOGLE", 279.84, 1.2}, {"BITCOIN", 77499.0, 1.08}, {"GOLD", 3898.9, -0.4}};
         for (Object[] r : s) { Markets.Quote q = new Markets.Quote(); q.label = (String) r[0]; q.price = (Double) r[1]; q.changePct = (Double) r[2]; q.ok = true; q.state = "BITCOIN".equals(r[0]) ? null : "OPEN"; l.add(q); }
         return l;
     }

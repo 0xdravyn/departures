@@ -23,7 +23,7 @@ The checklist for the first public release. Items marked (owner) need the mainta
 ## 4. Repository presentation (CleanYourTV style)
 - [x] README in CleanYourTV shape: banner, pitch, badges, "Start here", "What you get" with screenshots, setup, kiosk notes, "Restoring", "Questions people ask", "The story" (slot), "Contributing", "Licence". Support badge waits for the handle.
 - [ ] "The story" (owner): short and plain, in the maintainer's own voice: the debloated TV, the Vestaboard idea, why a screensaver.
-- [ ] `FUNDING.yml` with the real Buy Me a Coffee handle (owner), plus a support badge in the README.
+- [x] `FUNDING.yml` with the Buy Me a Coffee handle (dravyn), support badge and a Support section in the README.
 - [ ] Licence notes for the bundled font (OFL) kept next to it.
 
 ## 5. Launch

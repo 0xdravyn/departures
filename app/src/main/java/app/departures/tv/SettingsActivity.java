@@ -54,7 +54,7 @@ public final class SettingsActivity extends Activity {
         list = new ListView(this); list.setDividerHeight(dp(1)); list.setSelector(new android.graphics.drawable.ColorDrawable(0x22FFFFFF));
         root.addView(list, new LinearLayout.LayoutParams(-1, 0, 1f));
         TextView hint = new TextView(this); hint.setTextColor(0xFF666666); hint.setTextSize(14); hint.setPadding(0, dp(12), 0, 0);
-        hint.setText("Press Back to save. Changes also apply to the screensaver mode. Make sure the TV's screensaver settings are adjusted accordingly.");
+        hint.setText(screensaverHint());
         root.addView(hint);
         setContentView(root);
         buildRows();
@@ -77,6 +77,13 @@ public final class SettingsActivity extends Activity {
     }
 
     private static final class Heading extends Row { Heading(String t) { super(t); } String value() { return ""; } void step(int d) {} }
+
+    /** The footer: Han's line, plus the two ADB grants when the screensaver rows are locked. */
+    private String screensaverHint() {
+        String s = "Press Back to save. Changes also apply to the screensaver mode.";
+        if (!canSecure() || !canSystem()) s += "  Screensaver rows unlock after, over ADB:  adb shell pm grant app.departures.tv android.permission.WRITE_SECURE_SETTINGS  and  adb shell appops set app.departures.tv WRITE_SETTINGS allow";
+        return s;
+    }
 
     private String status() {
         StringBuilder s = new StringBuilder();
@@ -119,6 +126,31 @@ public final class SettingsActivity extends Activity {
         });
         rows.add(time("From", "quiet_from", cfg.quietFromMin));
         rows.add(time("Until", "quiet_to", cfg.quietToMin));
+        rows.add(new Heading("SCREENSAVER  (the TV's own page does not list third-party screensavers)"));
+        rows.add(new Row("TV screensaver") {
+            String value() {
+                String cur = android.provider.Settings.Secure.getString(getContentResolver(), "screensaver_components");
+                boolean ours = cur != null && cur.contains("app.departures.tv");
+                return canSecure() ? (ours ? "Departures" : "TV default") : (ours ? "Departures  (locked, see below)" : "TV default  (locked, see below)");
+            }
+            void step(int d) {
+                if (!canSecure()) { Toast.makeText(SettingsActivity.this, "Grant WRITE_SECURE_SETTINGS over ADB first (see README)", Toast.LENGTH_LONG).show(); return; }
+                String cur = android.provider.Settings.Secure.getString(getContentResolver(), "screensaver_components");
+                boolean ours = cur != null && cur.contains("app.departures.tv");
+                if (ours) { String prev = prefs.getString("previous_screensaver", ""); android.provider.Settings.Secure.putString(getContentResolver(), "screensaver_components", prev.isEmpty() ? "com.google.android.apps.tv.dreamx/.service.Backdrop" : prev); }
+                else { if (cur != null && !cur.isEmpty()) prefs.edit().putString("previous_screensaver", cur).apply(); android.provider.Settings.Secure.putString(getContentResolver(), "screensaver_components", "app.departures.tv/.DeparturesDream"); android.provider.Settings.Secure.putInt(getContentResolver(), "screensaver_enabled", 1); }
+            }
+        });
+        rows.add(new Row("Start after the TV idles for") {
+            int[] mins = {1, 2, 5, 10, 15, 30};
+            int current() { try { return (int) Math.round(android.provider.Settings.System.getInt(getContentResolver(), android.provider.Settings.System.SCREEN_OFF_TIMEOUT) / 60000.0); } catch (Exception e) { return -1; } }
+            String value() { int m = current(); String s = m < 0 ? "unknown" : m + (m == 1 ? " minute" : " minutes"); return canSystem() ? s : s + "  (locked, see below)"; }
+            void step(int d) {
+                if (!canSystem()) { Toast.makeText(SettingsActivity.this, "Grant WRITE_SETTINGS over ADB first (see README)", Toast.LENGTH_LONG).show(); return; }
+                int m = current(), i = 1; for (int k = 0; k < mins.length; k++) if (mins[k] == m) i = k;
+                android.provider.Settings.System.putInt(getContentResolver(), android.provider.Settings.System.SCREEN_OFF_TIMEOUT, mins[Math.floorMod(i + d, mins.length)] * 60000);
+            }
+        });
         rows.add(new Heading(""));
         rows.add(new Row("Reset these settings") {
             String value() { return ""; }
@@ -152,6 +184,9 @@ public final class SettingsActivity extends Activity {
             void step(int d) { int m = prefs.getInt(key, dflt); prefs.edit().putInt(key, Math.floorMod(m + 30 * d, 24 * 60)).apply(); }
         };
     }
+
+    private boolean canSecure() { return checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS") == android.content.pm.PackageManager.PERMISSION_GRANTED; }
+    private boolean canSystem() { return android.provider.Settings.System.canWrite(this); }
 
     private void refresh() { ((ArrayAdapter<?>) list.getAdapter()).notifyDataSetChanged(); }
 

@@ -9,7 +9,7 @@ Date, time, the weather, what's next on your calendar, what you were watching, a
   <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-cfffcf?style=flat&labelColor=15181e" alt="MIT licence"></a>
   <a href="https://github.com/0xdravyn/departures/stargazers"><img src="https://img.shields.io/github/stars/0xdravyn/departures?style=flat&color=cfffcf&labelColor=15181e" alt="Stars"></a>
   <a href="https://github.com/0xdravyn/departures/actions"><img src="https://img.shields.io/github/actions/workflow/status/0xdravyn/departures/checks.yml?style=flat&labelColor=15181e" alt="Checks"></a>
-  <!-- support badge: add once FUNDING.yml has the real handle -->
+  <a href="https://buymeacoffee.com/dravyn"><img src="https://img.shields.io/badge/support-%E2%9D%A4-ff5e8a?style=flat&labelColor=15181e" alt="Support: buy me a coffee"></a>
 </p>
 
 Runs on Android TV and Google TV (Android 8.0 and newer): as the **screensaver**, or as an **app** that stays on all day. No account, no server, no analytics. Your calendar links and location never leave the TV.
@@ -31,7 +31,7 @@ A 22 by 6 board of flaps, full screen on a true black background (on an OLED tho
 | Now | Keep watching? | Markets |
 |---|---|---|
 | ![Now face](docs/face-now.png) | ![Keep watching face](docs/face-keep-watching.png) | ![Markets face](docs/face-markets.png) |
-| Date and time (the minutes flip), the weather now with today's high and low, and what's next on your calendars today: the event running now, else the next to start, each giving way to the following one as it ends. Once today is done, tomorrow's first event. | The newest resume entry across your streaming apps (Android TV's Watch Next table), when there is one. | Up to four assets with the day's change, green or red, under a header that says OPEN or CLOSED. Defaults: S&P 500, NVIDIA, Bitcoin, gold. |
+| Date and time (the minutes flip), the weather now with today's high and low, and what's next on your calendars today: the event running now, else the next to start, each giving way to the following one as it ends. Once today is done, tomorrow's first event. | The newest resume entry across your streaming apps (Android TV's Watch Next table), when there is one. | Up to five assets with the day's change, green or red, under a `MARKETS @ time` header. Defaults: S&P 500, NVIDIA, Google, Bitcoin, gold. |
 
 Quiet hours dim the board at night. The screenshots are the app's demo mode, which uses sample data.
 
@@ -42,7 +42,7 @@ Quiet hours dim the board at night. The screenshots are the app's demo mode, whi
 
 ## Settings on the TV
 
-Hold OK on the board (or press the remote's Menu button), or go to the TV's Settings > Screen saver > Departures. One row per view: how long it stays before the next, or Off to drop it from the rotation (Markets only for a shop, Now only for a hallway; the last view on cannot be switched off). Also the flip animation, board brightness, 12 or 24-hour clock, Celsius or Fahrenheit, and quiet hours with their start and end. A three-second reminder at every app launch says how to get here. The app and the screensaver share these settings. What needs typing (your coordinates, calendar addresses, the market list) lives in `config.json`.
+Hold OK on the board (or press the remote's Menu button). One row per view: how long it stays before the next, or Off to drop it from the rotation (Markets only for a shop, Now only for a hallway; the last view on cannot be switched off). Also the flip animation, board brightness, 12 or 24-hour clock, Celsius or Fahrenheit, and quiet hours with their start and end. A three-second reminder at every app launch says how to get here. The app and the screensaver share these settings. What needs typing (your coordinates, calendar addresses, the market list) lives in `config.json`.
 
 ## Setup
 
@@ -56,7 +56,7 @@ What you need: a computer on the same Wi-Fi as the TV, `adb` (Android platform t
 2. **Write your configuration.** Copy [`config.example.json`](config.example.json) to `config.json` (it is git-ignored) and fill in:
    - `location`: your latitude and longitude, for the weather.
    - `calendars`: one entry per calendar, with its **secret iCal address**. In Google Calendar on the web: Settings > the calendar > Integrate calendar > "Secret address in iCal format" (it contains `/private-`; the public address returns 404 for a private calendar). Anyone holding that link can read the calendar, so treat it like a password.
-   - `markets`: plain names or tickers, up to four: `["S&P 500", "NVDA", "bitcoin", "gold"]`. Stocks, indices and futures come from Yahoo Finance's public endpoint; crypto from CoinGecko, chosen from the name (`bitcoin`, `ETH`, or any lower-case CoinGecko id). `"yahoo:"` and `"coingecko:"` prefixes force a source; `[]` turns the face off.
+   - `markets`: plain names or tickers, up to five: `["S&P 500", "NVDA", "bitcoin", "gold"]`. Stocks, indices and futures come from Yahoo Finance's public endpoint; crypto from CoinGecko, chosen from the name (`bitcoin`, `ETH`, or any lower-case CoinGecko id). `"yahoo:"` and `"coingecko:"` prefixes force a source; `[]` turns the face off.
    - `clock`, `units`, `quiet_hours`, `calendar.lookahead_days`: optional.
 3. **Push it into the app's private storage** (nowhere else on the TV can read it):
    ```bash
@@ -65,16 +65,19 @@ What you need: a computer on the same Wi-Fi as the TV, `adb` (Android platform t
    adb shell rm /data/local/tmp/departures-config.json
    ```
 4. **Optional, for Keep watching?:** `adb shell pm grant app.departures.tv android.permission.READ_TV_LISTINGS`
-5. **Make it the screensaver:** Settings > System > Screen saver > Departures, or
-   `adb shell settings put secure screensaver_components app.departures.tv/.DeparturesDream`.
-   The TV's idle timer decides when it starts (`adb shell settings put system screen_off_timeout 120000` for two minutes).
+5. **Make it the screensaver.** Google TV's own Screen saver page lists only Google's modes, so the switch lives in Departures' settings; grant it the two permissions once:
+   ```bash
+   adb shell pm grant app.departures.tv android.permission.WRITE_SECURE_SETTINGS
+   adb shell appops set app.departures.tv WRITE_SETTINGS allow
+   ```
+   Then open Departures, hold OK, and set **TV screensaver: Departures** and **Start after the TV idles for** (the same value the TV calls its sleep or screensaver delay). Without the grants, the ADB equivalent is `adb shell settings put secure screensaver_components app.departures.tv/.DeparturesDream` and `adb shell settings put system screen_off_timeout 120000` (two minutes).
 6. Open Departures from the home screen once to check the board, then switch USB debugging off again.
 
 **Kiosk use.** For a board that comes back on its own after a power cut, let the home screen start it: the [CleanYourTV](https://github.com/Gathin23/cleanyourtv) launcher can open an app at every power-on (`open_on_start`); Android itself does not let an app start a screen from the background on TVs. Pin a face in Settings, turn quiet hours off if you are open late, and switch off the TV's idle standby.
 
 ## Your data stays yours
 
-Departures runs entirely on the TV. It reads your calendars from the secret addresses you give it, fetches weather from [Open-Meteo](https://open-meteo.com/) (no account, no key), quotes from Yahoo Finance's public chart endpoint (unofficial, delayed) and CoinGecko's free price API (no key), and reads the TV's own Watch Next table. There is no server of ours, no account, no analytics and no self-updater. The header of the Markets face says OPEN or CLOSED; outside the session the prices are the last session's. The change is against the previous close for stocks, indices and futures, and the last 24 hours for crypto. Quotes refresh every ten minutes in the background and once more half-way through each Markets view, so a moving price flips while you watch; the sources may add their own delay. This is a wall board, not a terminal. Details and the reporting path: [`SECURITY.md`](SECURITY.md).
+Departures runs entirely on the TV. It reads your calendars from the secret addresses you give it, fetches weather from [Open-Meteo](https://open-meteo.com/) (no account, no key), quotes from Yahoo Finance's public chart endpoint (unofficial, delayed) and CoinGecko's free price API (no key), and reads the TV's own Watch Next table. There is no server of ours, no account, no analytics and no self-updater. Outside an exchange's session its rows simply stop moving; crypto rows keep moving. The change is against the previous close for stocks, indices and futures, and the last 24 hours for crypto. Quotes refresh every ten minutes in the background and once more half-way through each Markets view, so a moving price flips while you watch; the sources may add their own delay. This is a wall board, not a terminal. Details and the reporting path: [`SECURITY.md`](SECURITY.md).
 
 ## Restoring your TV
 
@@ -105,6 +108,10 @@ Uninstalling removes the configuration with it. Nothing else on the TV was chang
 ## Contributing
 
 Issues and pull requests are welcome; read [`CONTRIBUTING.md`](CONTRIBUTING.md) first. The short version: nothing personal in git, no new permissions without a README line, keep the board honest, test on a real TV.
+
+## Support
+
+If the board earns a place on your wall, [buy me a coffee](https://buymeacoffee.com/dravyn). It keeps the TV on.
 
 ## Licence
 

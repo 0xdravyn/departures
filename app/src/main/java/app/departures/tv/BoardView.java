@@ -112,6 +112,10 @@ public final class BoardView extends View {
                 if (Board.isChip(ch)) {
                     tile.setColor(blend(Board.chipColour(ch), dim));
                     c.drawRoundRect(rect, radius, radius, tile);
+                } else if (Board.isWeather(ch)) {
+                    tile.setColor(tileColour);
+                    c.drawRoundRect(rect, radius, radius, tile);
+                    weatherIcon(c, ch, rect, dim);
                 } else {
                     tile.setColor(tileColour);
                     c.drawRoundRect(rect, radius, radius, tile);
@@ -129,6 +133,33 @@ public final class BoardView extends View {
             }
         }
         if (animating) { if (still) animating = false; else postInvalidateOnAnimation(); }
+    }
+
+    private final Paint icon = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    /** Simple flat icons in the bit: a sun, a cloud, a cloud with drops, a snowflake. */
+    private void weatherIcon(Canvas c, char ch, RectF r, float k) {
+        float cx = r.centerX(), cy = r.centerY(), s = Math.min(r.width(), r.height()) * 0.42f;
+        icon.setStyle(Paint.Style.FILL);
+        if (ch == Board.WX_SUN) {
+            icon.setColor(blend(0xFFF1C426, k)); icon.setStrokeWidth(s * 0.18f);
+            c.drawCircle(cx, cy, s * 0.5f, icon);
+            for (int i = 0; i < 8; i++) { double a = i * Math.PI / 4; c.drawLine(cx + (float) Math.cos(a) * s * 0.68f, cy + (float) Math.sin(a) * s * 0.68f, cx + (float) Math.cos(a) * s * 0.95f, cy + (float) Math.sin(a) * s * 0.95f, icon); }
+            return;
+        }
+        int cloud = blend(ch == Board.WX_CLOUD ? 0xFFEBEBEB : 0xFFBFC6D1, k);
+        icon.setColor(cloud);
+        float top = ch == Board.WX_CLOUD ? cy : cy - s * 0.25f;
+        c.drawCircle(cx - s * 0.35f, top, s * 0.38f, icon); c.drawCircle(cx + s * 0.1f, top - s * 0.25f, s * 0.48f, icon); c.drawCircle(cx + s * 0.5f, top + s * 0.02f, s * 0.36f, icon);
+        c.drawRect(cx - s * 0.35f, top, cx + s * 0.5f, top + s * 0.38f, icon);
+        if (ch == Board.WX_RAIN) {
+            icon.setColor(blend(0xFF3278DC, k)); icon.setStrokeWidth(s * 0.16f);
+            for (int i = -1; i <= 1; i++) c.drawLine(cx + i * s * 0.35f, top + s * 0.6f, cx + i * s * 0.35f - s * 0.12f, top + s * 1.0f, icon);
+        } else if (ch == Board.WX_SNOW) {
+            icon.setColor(blend(0xFFEBEBEB, k)); icon.setStrokeWidth(s * 0.12f);
+            float sy = top + s * 0.85f;
+            for (int i = 0; i < 3; i++) { double a = i * Math.PI / 3; c.drawLine(cx - (float) Math.cos(a) * s * 0.3f, sy - (float) Math.sin(a) * s * 0.3f, cx + (float) Math.cos(a) * s * 0.3f, sy + (float) Math.sin(a) * s * 0.3f, icon); }
+        }
     }
 
     private static int blend(int colour, float k) {
