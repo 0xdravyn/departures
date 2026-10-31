@@ -17,6 +17,10 @@ Faces rotate (Now, Keep watching?, Now, Markets); bits flip only when their char
 - **As the screensaver** (the usual way): after the TV's idle timer, over Home or any app that is not playing. The TV's own sleep timer still applies afterwards, as with any screensaver.
 - **As an app, all day:** open Departures from the home screen. It holds the screen on and runs until you press Back, for a bar, a shop, a studio or a hallway. Some TVs add an "idle standby" that switches off after a few hours without a remote press whatever is running (Sony: Settings > System > Power > Idle TV standby); turn it off for all-day use. Left/Right jump between faces, Back leaves.
 
+## Settings on the TV
+
+Hold OK on the board (or press the remote's Menu button), or go to the TV's Settings > Screen saver > Departures. With the remote you can pin one face instead of cycling (Markets only, for a shop; Now only, for a hallway), set how long each face stays, switch the clock between 12 and 24 hours, Celsius and Fahrenheit, and turn quiet hours on or off. The app and the screensaver share these settings, so one change covers both. What needs typing (your coordinates, calendar addresses, the market list) stays in `config.json`.
+
 ## Your data stays yours
 
 Departures runs entirely on the TV. It reads your calendars from the secret iCal addresses you give it, fetches weather from [Open-Meteo](https://open-meteo.com/) (no account, no key), quotes from Yahoo Finance's public chart endpoint (unofficial, delayed) and CoinGecko's free price API (no key), and reads the TV's own Watch Next table. There is no server of ours, no account, no analytics and no self-updater. Read `SECURITY.md` before you set it up.

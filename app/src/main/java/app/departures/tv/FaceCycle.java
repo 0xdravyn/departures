@@ -11,8 +11,11 @@ final class FaceCycle {
     int face = NOW;
     private int step;
 
-    /** Advances to the next face that can be shown. */
-    int next(Data data) {
+    /** Advances to the next face that can be shown; a pinned face (settings) stays put. */
+    int next(Data data) { return next(data, -1); }
+
+    int next(Data data, int pinned) {
+        if (pinned >= 0) { face = pinned; return face; }
         for (int i = 0; i < CYCLE.length; i++) {
             step = (step + 1) % CYCLE.length;
             int f = CYCLE[step];

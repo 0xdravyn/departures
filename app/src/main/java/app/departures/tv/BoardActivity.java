@@ -15,8 +15,8 @@ import java.util.Calendar;
  * an app in front does not. (Some TVs add their own "idle standby" after hours without a remote press; turn
  * that off in the TV's settings for all-day use.) Same faces, rotation and quiet hours as the screensaver.
  *
- * Remote: Left/Right jump between faces and pause the rotation for two minutes, OK redraws, Down/Up preview the
- * quiet-hours dim, Back leaves. Without a configuration it shows sample data, so a fresh install has something to look at.
+ * Remote: Left/Right jump between faces and pause the rotation for two minutes, OK redraws, holding OK (or the
+ * Menu button) opens Settings, Down/Up preview the quiet-hours dim, Back leaves. Without a configuration it shows sample data, so a fresh install has something to look at.
  */
 public final class BoardActivity extends Activity implements Data.Listener {
     private static final long MANUAL_PAUSE_MS = 2 * 60_000L;
@@ -29,7 +29,7 @@ public final class BoardActivity extends Activity implements Data.Listener {
 
     private final Runnable rotate = new Runnable() {
         @Override public void run() {
-            if (System.currentTimeMillis() >= manualUntil) { if (data != null) cycle.next(data); else cycle.set((cycle.face + 1) % 3); show(true); if (cycle.face == FaceCycle.MARKETS && data != null) ui.postDelayed(() -> { if (cycle.face == FaceCycle.MARKETS) data.refreshQuotes(); }, cycle.delayMs(cfg) / 2); }
+            if (System.currentTimeMillis() >= manualUntil) { if (data != null) cycle.next(data, cfg.pinnedFace); else cycle.set((cycle.face + 1) % 3); show(true); if (cycle.face == FaceCycle.MARKETS && data != null) ui.postDelayed(() -> { if (cycle.face == FaceCycle.MARKETS) data.refreshQuotes(); }, cycle.delayMs(cfg) / 2); }
             ui.postDelayed(this, cycle.delayMs(cfg));
         }
     };
@@ -75,11 +75,33 @@ public final class BoardActivity extends Activity implements Data.Listener {
         show(true);
     }
 
+    @Override public boolean onKeyLongPress(int code, KeyEvent e) {
+        if (code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) { openSettings(); return true; }
+        return super.onKeyLongPress(code, e);
+    }
+
+    @Override public boolean onKeyUp(int code, KeyEvent e) {
+        if ((code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) && !e.isCanceled() && (e.getFlags() & KeyEvent.FLAG_LONG_PRESS) == 0) { show(true); return true; }
+        return super.onKeyUp(code, e);
+    }
+
+    private void openSettings() { startActivity(new android.content.Intent(this, SettingsActivity.class)); }
+
+    /** Back from Settings: re-read the choices and apply them at once. */
+    @Override protected void onResume() {
+        super.onResume();
+        Config fresh = Config.load(this);
+        boolean changed = cfg != null && (fresh.pinnedFace != cfg.pinnedFace || fresh.clock24 != cfg.clock24 || fresh.quietEnabled != cfg.quietEnabled || fresh.nowSeconds != cfg.nowSeconds || fresh.marketsSeconds != cfg.marketsSeconds || fresh.keepWatchingSeconds != cfg.keepWatchingSeconds || fresh.imperial != cfg.imperial);
+        cfg = fresh;
+        if (changed) { if (cfg.pinnedFace >= 0) cycle.set(cfg.pinnedFace); manualUntil = 0; applyQuiet(); show(true); }
+    }
+
     @Override public boolean onKeyDown(int code, KeyEvent e) {
         switch (code) {
             case KeyEvent.KEYCODE_DPAD_RIGHT: manual(1); return true;
             case KeyEvent.KEYCODE_DPAD_LEFT: manual(-1); return true;
-            case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: show(true); return true;
+            case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: if (e.getRepeatCount() == 0) { e.startTracking(); return true; } return true;
+            case KeyEvent.KEYCODE_MENU: case KeyEvent.KEYCODE_SETTINGS: openSettings(); return true;
             case KeyEvent.KEYCODE_DPAD_DOWN: view.setDim(cfg.quietDim); return true;
             case KeyEvent.KEYCODE_DPAD_UP: view.setDim(1f); return true;
             default: return super.onKeyDown(code, e);

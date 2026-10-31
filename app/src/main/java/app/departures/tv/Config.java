@@ -30,6 +30,10 @@ public final class Config {
     public static final class Market { public final String label, source, symbol; Market(String l, String s, String y) { label = l; source = s; symbol = y; } }
     public final List<Market> markets = new ArrayList<>();
     public boolean present;
+    /** -1 cycles the faces; 0, 1 or 2 pins one (FaceCycle.NOW, KEEP_WATCHING, MARKETS). Set on the TV. */
+    public int pinnedFace = -1;
+    public boolean quietEnabled = true;
+    static final String PREFS = "settings";
     /** The public defaults when the config has no "markets" key at all; an empty list in the config turns the face off. */
     static final List<Market> DEFAULT_MARKETS = List.of(new Market("S&P 500", "yahoo", "^GSPC"), new Market("NVIDIA", "yahoo", "NVDA"), new Market("BITCOIN", "coingecko", "bitcoin"), new Market("GOLD", "yahoo", "GC=F"));
     /** How far ahead the next-event rows look: 0 shows today only, 1 (default) falls back to tomorrow's first event once today is done. */
@@ -65,6 +69,15 @@ public final class Config {
         } catch (Exception e) {
             android.util.Log.w("Departures", "config.json unreadable: " + e.getClass().getSimpleName());
         }
+        // Choices made on the TV itself (SettingsActivity) win over config.json; both the app and the screensaver read them.
+        android.content.SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        c.pinnedFace = p.getInt("pinned_face", -1);
+        c.nowSeconds = p.getInt("now_seconds", c.nowSeconds);
+        c.keepWatchingSeconds = p.getInt("keep_watching_seconds", c.keepWatchingSeconds);
+        c.marketsSeconds = p.getInt("markets_seconds", c.marketsSeconds);
+        if (p.contains("clock24")) c.clock24 = p.getBoolean("clock24", c.clock24);
+        if (p.contains("imperial")) c.imperial = p.getBoolean("imperial", c.imperial);
+        c.quietEnabled = p.getBoolean("quiet_enabled", true);
         return c;
     }
 
@@ -113,6 +126,7 @@ public final class Config {
 
     /** True inside quiet hours, which may wrap past midnight. */
     public boolean quiet(int minuteOfDay) {
+        if (!quietEnabled) return false;
         return quietFromMin <= quietToMin ? (minuteOfDay >= quietFromMin && minuteOfDay < quietToMin)
                                           : (minuteOfDay >= quietFromMin || minuteOfDay < quietToMin);
     }

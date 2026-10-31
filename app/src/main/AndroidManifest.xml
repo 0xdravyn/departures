@@ -16,6 +16,8 @@
         <activity android:name=".BoardActivity" android:exported="true" android:screenOrientation="landscape">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LEANBACK_LAUNCHER" /></intent-filter>
         </activity>
+        <!-- Settings on the TV: which face, how long each, clock, units, quiet hours. Shared by the app and the screensaver. -->
+        <activity android:name=".SettingsActivity" android:exported="true" android:excludeFromRecents="true" />
         <!-- Copies /data/local/tmp/departures-config.json (pushed over ADB) into private storage, then exits. -->
         <activity android:name=".ImportActivity" android:exported="true" android:excludeFromRecents="true" android:theme="@android:style/Theme.NoDisplay" />
     </application>
