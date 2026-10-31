@@ -122,10 +122,10 @@ public final class Faces {
     // ----- samples, for the preview before data exists -----
 
     public static Weather sampleWeather() { Weather w = new Weather(); w.now = 12; w.high = 14; w.low = 8; w.condition = "PARTLY CLOUDY"; w.rain = true; return w; }
-    public static Event sampleEvent(long nowMs) { Event e = new Event(); e.title = "USTX Product Review"; e.label = "TX"; e.startMs = nowMs + 72 * 60000L; e.endMs = e.startMs + 3600000L; return e; }
+    public static Event sampleEvent(long nowMs) { Event e = new Event(); e.title = "Dinner with Sam"; e.label = "HOME"; e.startMs = nowMs + 72 * 60000L; e.endMs = e.startMs + 3600000L; return e; }
     public static List<Markets.Quote> sampleQuotes() {
         List<Markets.Quote> l = new java.util.ArrayList<>();
-        Object[][] s = {{"S&P 500", 7580.07, -0.57}, {"NVIDIA", 204.64, -3.0}, {"GOOGLE", 279.84, 1.2}, {"BITCOIN", 77499.0, 1.08}, {"GOLD", 3898.9, -0.4}};
+        Object[][] s = {{"S&P 500", 7580.07, -0.57}, {"NVIDIA", 204.64, -3.0}, {"BITCOIN", 77499.0, 1.08}, {"GOLD", 3898.9, -0.4}};
         for (Object[] r : s) { Markets.Quote q = new Markets.Quote(); q.label = (String) r[0]; q.price = (Double) r[1]; q.changePct = (Double) r[2]; q.ok = true; l.add(q); }
         return l;
     }
