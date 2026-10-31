@@ -2,6 +2,7 @@ package app.departures.tv;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -65,15 +66,41 @@ public final class Faces {
         return s;
     }
 
-    /** Title, episode line and app, with red chips top-right and bottom-right. */
-    public static Board upNext(Resume r) {
+    /** Keep watching: title, episode line and app, with red chips top-right and bottom-right. */
+    public static Board keepWatching(Resume r) {
         Board b = new Board();
-        b.text(0, 0, "UP NEXT");
+        b.text(0, 0, "KEEP WATCHING?");
         b.chip(0, Board.COLS - 1, Board.CHIP_RED);
         b.text(2, 0, fit(r.title, Board.COLS));
         b.text(3, 0, fit(r.detail, Board.COLS));
         b.text(4, 0, fit(r.app, Board.COLS));
         b.chip(5, Board.COLS - 2, Board.CHIP_RED); b.chip(5, Board.COLS - 1, Board.CHIP_RED);
+        return b;
+    }
+
+
+    /**
+     * Markets: a header with the face's orange chip, then one row per asset: a green or red chip for the day's
+     * direction, the label, the price and the change against the previous close (24 h for crypto).
+     * Our own layout, not the Vestaboard channel's: chips on the left as on the other faces, percentages not points.
+     */
+    public static Board markets(List<Markets.Quote> quotes, long nowMs, boolean clock24) {
+        Board b = new Board();
+        b.text(0, 0, "MARKETS");
+        b.textRight(0, (clock24 ? new SimpleDateFormat("HH:mm", Locale.US) : new SimpleDateFormat("h:mma", Locale.US)).format(new Date(nowMs)).toUpperCase(Locale.US));
+        b.chip(0, 8, Board.CHIP_ORANGE);
+        int row = 1;
+        for (Markets.Quote q : quotes) {
+            if (row >= Board.ROWS) break;
+            if (!q.ok) { b.text(row, 2, fit(q.label.toUpperCase(Locale.US), 8)); b.textRight(row, "NO DATA"); row++; continue; }
+            b.chip(row, 0, q.changePct > 0.05 ? Board.CHIP_GREEN : q.changePct < -0.05 ? Board.CHIP_RED : Board.CHIP_WHITE);
+            b.text(row, 2, fit(q.label.toUpperCase(Locale.US), 8));
+            String price = Markets.price(q.price), chg = Markets.change(q.changePct);
+            // price ends at column 14, change right-aligned at the edge
+            b.text(row, Math.max(10, 15 - price.length()), price);
+            b.textRight(row, chg);
+            row++;
+        }
         return b;
     }
 
@@ -91,5 +118,11 @@ public final class Faces {
 
     public static Weather sampleWeather() { Weather w = new Weather(); w.now = 12; w.high = 14; w.low = 8; w.condition = "PARTLY CLOUDY"; w.rain = true; return w; }
     public static Event sampleEvent(long nowMs) { Event e = new Event(); e.title = "USTX Product Review"; e.label = "TX"; e.startMs = nowMs + 72 * 60000L; e.endMs = e.startMs + 3600000L; return e; }
+    public static List<Markets.Quote> sampleQuotes() {
+        List<Markets.Quote> l = new java.util.ArrayList<>();
+        Object[][] s = {{"S&P 500", 7580.07, -0.57}, {"NVIDIA", 204.64, -3.0}, {"GOOGLE", 279.84, 1.2}, {"BITCOIN", 77499.0, 1.08}, {"GOLD", 3898.9, -0.4}};
+        for (Object[] r : s) { Markets.Quote q = new Markets.Quote(); q.label = (String) r[0]; q.price = (Double) r[1]; q.changePct = (Double) r[2]; q.ok = true; l.add(q); }
+        return l;
+    }
     public static Resume sampleResume() { Resume r = new Resume(); r.title = "Kim's Convenience"; r.detail = "S3E6   11 min left"; r.app = "Netflix"; return r; }
 }

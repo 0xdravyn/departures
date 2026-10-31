@@ -3,12 +3,9 @@ package app.departures.tv;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.LinearGradient;
 import android.graphics.Paint;
-import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.os.SystemClock;
 import android.view.View;
@@ -32,7 +29,6 @@ public final class BoardView extends View {
     private final Paint tile = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint split = new Paint();
     private final Paint glyph = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint room = new Paint();
     private final Rect bounds = new Rect();
     private Board shown = new Board(), target = new Board();
     private final long[] flipStart = new long[Board.ROWS * Board.COLS];
@@ -79,9 +75,8 @@ public final class BoardView extends View {
     @Override protected void onDraw(Canvas c) {
         int w = getWidth(), h = getHeight();
         if (w == 0 || h == 0) return;
-        // the room: near black with a faint light from above
-        if (room.getShader() == null) room.setShader(new RadialGradient(w / 2f, -h * 0.4f, h * 1.1f, 0xFF1C1C1E, 0xFF09090A, Shader.TileMode.CLAMP));
-        c.drawRect(0, 0, w, h, room);
+        // True black behind the board: on an OLED those pixels are off (no wear), and the tiles get the contrast.
+        c.drawColor(Color.BLACK);
 
         float mx = w * 0.025f, my = h * 0.045f;
         float bitW = (w - 2 * mx) / Board.COLS;

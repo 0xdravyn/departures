@@ -20,6 +20,7 @@ final class Data {
     volatile Faces.Weather weather;
     volatile List<Faces.Event> events = Collections.emptyList();
     volatile Faces.Resume resume;
+    volatile List<Markets.Quote> quotes = Collections.emptyList();
 
     private final Context ctx;
     private final Listener listener;
@@ -46,6 +47,8 @@ final class Data {
         if (!ev.isEmpty() || !events.isEmpty()) { events = ev; changed = true; }
         Faces.Resume r = WatchNext.newest(ctx);
         if ((r == null) != (resume == null) || (r != null && !(r.title.equals(resume.title) && r.detail.equals(resume.detail)))) { resume = r; changed = true; }
+        List<Markets.Quote> qs = Markets.load(ctx, cfg, network);
+        if (!qs.isEmpty() || !quotes.isEmpty()) { quotes = qs; changed = true; }
         if (changed) ui.post(() -> listener.onData(this));
     }
 

@@ -12,8 +12,8 @@
             <intent-filter><action android:name="android.service.dreams.DreamService" /><category android:name="android.intent.category.DEFAULT" /></intent-filter>
             <meta-data android:name="android.service.dream" android:resource="@xml/dream" />
         </service>
-        <!-- Preview on demand (its launcher tile): the same board, Left/Right switch faces, Back leaves. -->
-        <activity android:name=".PreviewActivity" android:exported="true">
+        <!-- The board as an app (its launcher tile): same faces, screen held on, runs until Back. -->
+        <activity android:name=".BoardActivity" android:exported="true" android:screenOrientation="landscape">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LEANBACK_LAUNCHER" /></intent-filter>
         </activity>
         <!-- Copies /data/local/tmp/departures-config.json (pushed over ADB) into private storage, then exits. -->

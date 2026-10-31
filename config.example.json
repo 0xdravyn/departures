@@ -1,11 +1,36 @@
 {
-  "location": { "name": "Your city", "latitude": 0.0, "longitude": 0.0 },
+  "location": {
+    "name": "Your city",
+    "latitude": 0.0,
+    "longitude": 0.0
+  },
   "units": "metric",
   "clock": "12h",
-  "quiet_hours": { "from": "23:00", "to": "07:00", "dim": 0.3 },
+  "quiet_hours": {
+    "from": "23:00",
+    "to": "07:00",
+    "dim": 0.3
+  },
   "calendars": [
-    { "label": "home", "url": "https://calendar.google.com/calendar/ical/REPLACE/private-REPLACE/basic.ics" },
-    { "label": "work", "url": "https://calendar.google.com/calendar/ical/REPLACE/private-REPLACE/basic.ics" }
+    {
+      "label": "home",
+      "url": "https://calendar.google.com/calendar/ical/REPLACE/private-REPLACE/basic.ics"
+    },
+    {
+      "label": "work",
+      "url": "https://calendar.google.com/calendar/ical/REPLACE/private-REPLACE/basic.ics"
+    }
   ],
-  "faces": { "now_seconds": 60, "up_next_seconds": 30 }
+  "faces": {
+    "now_seconds": 60,
+    "keep_watching_seconds": 30,
+    "markets_seconds": 30
+  },
+  "markets": [
+    "S&P 500",
+    "NVIDIA",
+    "GOOGLE",
+    "bitcoin",
+    "gold"
+  ]
 }

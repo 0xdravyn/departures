@@ -7,29 +7,19 @@ import android.service.dreams.DreamService;
 import java.util.Calendar;
 
 /**
- * The screensaver: a Board that rotates Now and Up next on the configured cadence, refreshes the clock on the
- * minute, and dims during quiet hours. Data lives in Data and is only fetched while this is on screen.
+ * The screensaver. Rotates the faces (FaceCycle), refreshes the clock on the minute and dims during quiet hours;
+ * data is only fetched while this is on screen. For a board that must stay on regardless of the TV's sleep
+ * timers, open the app from the home screen instead: BoardActivity is the same thing in the foreground.
  */
 public final class DeparturesDream extends DreamService implements Data.Listener {
     private final Handler ui = new Handler(Looper.getMainLooper());
+    private final FaceCycle cycle = new FaceCycle();
     private BoardView view;
     private Config cfg;
     private Data data;
-    private boolean upNext;
-    private final Runnable rotate = new Runnable() {
-        @Override public void run() {
-            upNext = !upNext && data.resume != null;
-            show(true);
-            ui.postDelayed(this, (upNext ? cfg.upNextSeconds : cfg.nowSeconds) * 1000L);
-        }
-    };
-    private final Runnable minute = new Runnable() {
-        @Override public void run() {
-            if (!upNext) show(true);
-            applyQuiet();
-            ui.postDelayed(this, msToNextMinute());
-        }
-    };
+
+    private final Runnable rotate = new Runnable() { @Override public void run() { cycle.next(data); show(true); ui.postDelayed(this, cycle.delayMs(cfg)); } };
+    private final Runnable minute = new Runnable() { @Override public void run() { if (cycle.face != FaceCycle.KEEP_WATCHING) show(true); applyQuiet(); ui.postDelayed(this, msToNextMinute()); } };
 
     @Override public void onAttachedToWindow() {
         super.onAttachedToWindow();
@@ -41,7 +31,7 @@ public final class DeparturesDream extends DreamService implements Data.Listener
         applyQuiet();
         data = new Data(this, cfg, this);
         data.start();
-        ui.postDelayed(rotate, cfg.nowSeconds * 1000L);
+        ui.postDelayed(rotate, cycle.delayMs(cfg));
         ui.postDelayed(minute, msToNextMinute());
     }
 
@@ -49,16 +39,12 @@ public final class DeparturesDream extends DreamService implements Data.Listener
 
     @Override public void onData(Data d) { if (view != null) show(view.getWidth() > 0); }
 
-    private void show(boolean animate) {
-        long now = System.currentTimeMillis();
-        Board b = upNext && data.resume != null ? Faces.upNext(data.resume) : Faces.now(now, cfg.clock24, data.weather, data.nextEvent(now));
-        if (animate) view.flipTo(b); else view.setBoard(b);
-    }
+    private void show(boolean animate) { Board b = cycle.board(data, cfg, System.currentTimeMillis()); if (animate) view.flipTo(b); else view.setBoard(b); }
 
     private void applyQuiet() {
         Calendar c = Calendar.getInstance();
         view.setDim(cfg.quiet(c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE)) ? cfg.quietDim : 1f);
     }
 
-    private static long msToNextMinute() { long now = System.currentTimeMillis(); return 60_000L - (now % 60_000L) + 50; }
+    static long msToNextMinute() { long now = System.currentTimeMillis(); return 60_000L - (now % 60_000L) + 50; }
 }

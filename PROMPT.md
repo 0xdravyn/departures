@@ -26,10 +26,10 @@ Configure
 - Copy `config.example.json` to `config.json` (it is git-ignored). Fill in my coordinates, units, 12h or 24h clock and quiet hours after asking me; leave the calendar lines for me to paste in, then wait until I say the file is saved.
 - Check each calendar address only by its shape and by fetching it: report "ok" or the HTTP status, never the address. A `/public/` address returns 404 for a private calendar; the secret one has `/private-` in it.
 - Push and import: `adb push config.json /data/local/tmp/departures-config.json`, `adb shell am start -n app.departures.tv/.ImportActivity`, then `adb shell rm /data/local/tmp/departures-config.json`. Confirm the import toast or the "configuration imported" log line.
-- If I want the Up next face: `adb shell pm grant app.departures.tv android.permission.READ_TV_LISTINGS`.
+- If I want the Keep watching face: `adb shell pm grant app.departures.tv android.permission.READ_TV_LISTINGS`.
 
 Verify
-- Open the preview: `adb shell am start -n app.departures.tv/.PreviewActivity`, wait 10 seconds, pull a screenshot (`adb shell screencap -p /data/local/tmp/d.png`, `adb pull`), and show me. Check the weather is for my city and the next event is real. Press Right (`adb shell input keyevent KEYCODE_DPAD_RIGHT`) and screenshot the Up next face.
+- Open the board as an app: `adb shell am start -n app.departures.tv/.BoardActivity`, wait 10 seconds, pull a screenshot (`adb shell screencap -p /data/local/tmp/d.png`, `adb pull`), and show me. Check the weather is for my city and the next event is real. Press Right (`adb shell input keyevent KEYCODE_DPAD_RIGHT`) and screenshot the Keep watching face.
 - If the screen is black, the TV is probably asleep: `adb shell input keyevent KEYCODE_WAKEUP` and try again.
 - Read `adb logcat -d -s Departures` and explain any warning to me in plain words.
 
