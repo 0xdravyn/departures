@@ -126,7 +126,7 @@ public final class Faces {
     public static List<Markets.Quote> sampleQuotes() {
         List<Markets.Quote> l = new java.util.ArrayList<>();
         Object[][] s = {{"S&P 500", 7580.07, -0.57}, {"NVIDIA", 204.64, -3.0}, {"BITCOIN", 77499.0, 1.08}, {"GOLD", 3898.9, -0.4}};
-        for (Object[] r : s) { Markets.Quote q = new Markets.Quote(); q.label = (String) r[0]; q.price = (Double) r[1]; q.changePct = (Double) r[2]; q.ok = true; l.add(q); }
+        for (Object[] r : s) { Markets.Quote q = new Markets.Quote(); q.label = (String) r[0]; q.price = (Double) r[1]; q.changePct = (Double) r[2]; q.ok = true; q.state = "BITCOIN".equals(r[0]) ? null : "OPEN"; l.add(q); }
         return l;
     }
     public static Resume sampleResume() { Resume r = new Resume(); r.title = "Kim's Convenience"; r.detail = "S3E6   11 min left"; r.app = "Netflix"; return r; }
