@@ -42,7 +42,8 @@ public final class Faces {
             b.text(5, 1, fit(w5, room));
             if (!label.isEmpty()) b.textRight(5, label);
         } else {
-            b.text(4, 0, "NOTHING SCHEDULED");
+            b.chip(4, 0, Board.CHIP_BLUE); b.chip(5, 0, Board.CHIP_BLUE);
+            b.text(4, 1, "NOTHING ELSE TODAY");
         }
         return b;
     }
@@ -86,25 +87,25 @@ public final class Faces {
      */
     public static Board markets(List<Markets.Quote> quotes, long nowMs, boolean clock24) {
         Board b = new Board();
-        b.text(0, 0, "MARKETS");
-        b.chip(0, 8, Board.CHIP_ORANGE);
-        // Header right: OPEN or CLOSED for the exchange-traded rows (crypto never closes), then the quote time.
+        // Header, centred: MARKETS plus OPEN or CLOSED for the exchange-traded rows (crypto has no session);
+        // orange face chips at both ends. Footer, centred: the time of the board.
         String state = null;
         for (Markets.Quote q : quotes) if (q.ok && q.state != null) { state = q.state; break; }
-        String time = (clock24 ? new SimpleDateFormat("HH:mm", Locale.US) : new SimpleDateFormat("h:mma", Locale.US)).format(new Date(nowMs)).toUpperCase(Locale.US);
-        b.textRight(0, state == null ? time : state + " " + time);
+        b.textCenter(0, state == null ? "MARKETS" : "MARKETS " + state);
+        b.chip(0, 0, Board.CHIP_ORANGE); b.chip(0, Board.COLS - 1, Board.CHIP_ORANGE);
         int row = 1;
         for (Markets.Quote q : quotes) {
-            if (row >= Board.ROWS) break;
+            if (row > 4) break;
             if (!q.ok) { b.text(row, 2, fit(q.label.toUpperCase(Locale.US), 8)); b.textRight(row, "NO DATA"); row++; continue; }
             b.chip(row, 0, q.changePct > 0.05 ? Board.CHIP_GREEN : q.changePct < -0.05 ? Board.CHIP_RED : Board.CHIP_WHITE);
             b.text(row, 2, fit(q.label.toUpperCase(Locale.US), 8));
             String price = Markets.price(q.price), chg = Markets.change(q.changePct);
-            // price ends at column 14, change right-aligned at the edge
             b.text(row, Math.max(10, 15 - price.length()), price);
             b.textRight(row, chg);
             row++;
         }
+        String time = (clock24 ? new SimpleDateFormat("HH:mm", Locale.US) : new SimpleDateFormat("h:mm a", Locale.US)).format(new Date(nowMs)).toUpperCase(Locale.US);
+        b.textCenter(5, time);
         return b;
     }
 

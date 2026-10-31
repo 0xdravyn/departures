@@ -52,12 +52,20 @@ final class Data {
         if (changed) ui.post(() -> listener.onData(this));
     }
 
-    /** The next event: one that is running now, else the soonest to start. */
+    /**
+     * The event the board shows: one running now, else the next to start today; once today is done, the first
+     * event within cfg.lookaheadDays (tomorrow by default), so the evening board points at the morning. Null
+     * when nothing qualifies, and the face says so.
+     */
     Faces.Event nextEvent(long now) {
+        java.util.Calendar c = java.util.Calendar.getInstance(); c.setTimeInMillis(now);
+        c.set(java.util.Calendar.HOUR_OF_DAY, 0); c.set(java.util.Calendar.MINUTE, 0); c.set(java.util.Calendar.SECOND, 0); c.set(java.util.Calendar.MILLISECOND, 0);
+        c.add(java.util.Calendar.DAY_OF_MONTH, 1 + cfg.lookaheadDays);
+        long horizon = c.getTimeInMillis();
         Faces.Event soonest = null;
         for (Faces.Event e : events) {
             if (e.startMs <= now && e.endMs > now) return e;
-            if (e.startMs > now && (soonest == null || e.startMs < soonest.startMs)) soonest = e;
+            if (e.startMs > now && e.startMs < horizon && (soonest == null || e.startMs < soonest.startMs)) soonest = e;
         }
         return soonest;
     }

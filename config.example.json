@@ -29,8 +29,10 @@
   "markets": [
     "S&P 500",
     "NVIDIA",
-    "GOOGLE",
     "bitcoin",
     "gold"
-  ]
+  ],
+  "calendar": {
+    "lookahead_days": 1
+  }
 }

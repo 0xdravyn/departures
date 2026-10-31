@@ -37,6 +37,9 @@ public final class Board {
     /** Right-aligned text ending at the last column. */
     public void textRight(int row, String s) { if (s != null) text(row, Math.max(0, COLS - s.length()), s); }
 
+    /** Centred on the row. */
+    public void textCenter(int row, String s) { if (s != null) text(row, Math.max(0, (COLS - s.length()) / 2), s); }
+
     public void chip(int row, int col, char chip) { set(row, col, chip); }
 
     public static boolean isChip(char c) { return c >= CHIP_RED && c <= CHIP_WHITE; }

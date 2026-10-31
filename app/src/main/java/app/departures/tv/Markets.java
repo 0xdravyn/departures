@@ -38,7 +38,7 @@ final class Markets {
                 if (c != null && c.has("usd")) { q.price = c.optDouble("usd"); q.changePct = c.optDouble("usd_24h_change", 0); q.ok = true; }
             } else {
                 double[] p = yahoo(m.symbol);
-                if (p != null) { q.price = p[0]; q.changePct = p[1]; q.ok = true; q.state = p[2] == 1 ? "OPEN" : "CLOSED"; }
+                if (p != null) { q.price = p[0]; q.changePct = p[1]; q.ok = true; q.state = m.symbol.endsWith("-USD") ? null : (p[2] == 1 ? "OPEN" : "CLOSED"); }
             }
             if (!q.ok && cached != null) for (Quote old : cached) if (q.key.equals(old.key) && old.ok) { q = old; break; }
             any |= q.ok;
