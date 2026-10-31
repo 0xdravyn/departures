@@ -8,7 +8,7 @@ Status: working on one Sony BRAVIA (Google TV 12): weather, calendars, Watch Nex
 
 - **Now**: `SAT 31 OCT  1:48 PM`, the weather now and today's high and low, and the next event from your calendars with a countdown that ticks every minute.
 - **Keep watching?**: the newest resume entry across your streaming apps (what Android TV calls Watch Next), when there is one.
-- **Markets**: up to five prices with the day's change, green or red. The defaults are the S&P 500, NVIDIA, Google, Bitcoin and gold; put your own in `config.json` by plain name or ticker (`"markets": ["S&P 500", "NVDA", "bitcoin", "gold"]`), or set `"markets": []` to turn the face off. Quotes are delayed and informational; this is a wall board, not a terminal.
+- **Markets**: up to five prices with the day's change, green or red. The defaults are the S&P 500, NVIDIA, Google, Bitcoin and gold; put your own in `config.json` by plain name or ticker (`"markets": ["S&P 500", "NVDA", "bitcoin", "gold"]`), or set `"markets": []` to turn the face off. The header says OPEN or CLOSED for the exchange-traded rows; outside the session the prices and the change are the last session's. The change is against the previous close for stocks, indices and futures, and the last 24 hours for crypto, which never closes. Quotes refresh every 10 minutes while the board is on screen and may themselves be delayed by the source; this is a wall board, not a terminal.
 
 Faces rotate (Now, Keep watching?, Now, Markets); bits flip only when their character changes. No sound. Quiet hours dim the board at night. The background is true black, so on an OLED those pixels are simply off.
 

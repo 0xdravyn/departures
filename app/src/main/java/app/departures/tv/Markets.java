@@ -18,7 +18,8 @@ import java.util.List;
  * failed fetch keeps yesterday's numbers rather than an empty face. Informational only, never for trading.
  */
 final class Markets {
-    static final class Quote { String label; double price; double changePct; boolean ok; }
+    /** state: "OPEN" during a regular session, "CLOSED" otherwise (pre- and after-hours count as closed), null for crypto. */
+    static final class Quote { String label; double price; double changePct; boolean ok; String state; }
     private static final long FRESH_MS = 10 * 60_000L;
 
     static List<Quote> load(Context ctx, Config cfg, boolean allowNetwork) {
@@ -37,7 +38,7 @@ final class Markets {
                 if (c != null && c.has("usd")) { q.price = c.optDouble("usd"); q.changePct = c.optDouble("usd_24h_change", 0); q.ok = true; }
             } else {
                 double[] p = yahoo(m.symbol);
-                if (p != null) { q.price = p[0]; q.changePct = p[1]; q.ok = true; }
+                if (p != null) { q.price = p[0]; q.changePct = p[1]; q.ok = true; q.state = p[2] == 1 ? "OPEN" : "CLOSED"; }
             }
             if (!q.ok && cached != null) for (Quote old : cached) if (old.label.equals(q.label) && old.ok) { q = old; break; }
             any |= q.ok;
@@ -46,14 +47,14 @@ final class Markets {
         if (any) {
             try {
                 JSONArray arr = new JSONArray();
-                for (Quote q : out) arr.put(new JSONObject().put("label", q.label).put("price", q.price).put("change", q.changePct).put("ok", q.ok));
+                for (Quote q : out) arr.put(new JSONObject().put("label", q.label).put("price", q.price).put("change", q.changePct).put("ok", q.ok).put("state", q.state == null ? JSONObject.NULL : q.state));
                 Files.write(cache.toPath(), arr.toString().getBytes(StandardCharsets.UTF_8));
             } catch (Exception ignored) {}
         }
         return out;
     }
 
-    /** {price, change % versus the previous close}, or null. */
+    /** {price, change % versus the previous close, 1 if the regular session is open}, or null. */
     private static double[] yahoo(String symbol) {
         try {
             String url = "https://query1.finance.yahoo.com/v8/finance/chart/" + java.net.URLEncoder.encode(symbol, "UTF-8") + "?range=5d&interval=1d";
@@ -69,7 +70,8 @@ final class Markets {
                 for (int i = 0; i < closes.length(); i++) if (!closes.isNull(i)) vals.add(closes.getDouble(i));
                 prev = vals.size() >= 2 ? vals.get(vals.size() - 2) : meta.optDouble("chartPreviousClose", price);
             }
-            return new double[]{price, prev > 0 ? (price - prev) / prev * 100 : 0};
+            boolean open = "REGULAR".equals(meta.optString("marketState", ""));
+            return new double[]{price, prev > 0 ? (price - prev) / prev * 100 : 0, open ? 1 : 0};
         } catch (Exception e) {
             android.util.Log.w("Departures", "quote failed for " + symbol + ": " + e.getClass().getSimpleName());
             return null;
@@ -91,7 +93,7 @@ final class Markets {
         try {
             JSONArray arr = new JSONArray(new String(Files.readAllBytes(cache.toPath()), StandardCharsets.UTF_8));
             List<Quote> out = new ArrayList<>();
-            for (int i = 0; i < arr.length(); i++) { JSONObject o = arr.getJSONObject(i); Quote q = new Quote(); q.label = o.getString("label"); q.price = o.getDouble("price"); q.changePct = o.getDouble("change"); q.ok = o.optBoolean("ok", true); out.add(q); }
+            for (int i = 0; i < arr.length(); i++) { JSONObject o = arr.getJSONObject(i); Quote q = new Quote(); q.label = o.getString("label"); q.price = o.getDouble("price"); q.changePct = o.getDouble("change"); q.ok = o.optBoolean("ok", true); q.state = o.isNull("state") ? null : o.optString("state"); out.add(q); }
             // the cache only counts if it is for the same list of labels
             if (out.size() != cfg.markets.size()) return null;
             for (int i = 0; i < out.size(); i++) if (!out.get(i).label.equals(cfg.markets.get(i).label)) return null;

@@ -87,8 +87,12 @@ public final class Faces {
     public static Board markets(List<Markets.Quote> quotes, long nowMs, boolean clock24) {
         Board b = new Board();
         b.text(0, 0, "MARKETS");
-        b.textRight(0, (clock24 ? new SimpleDateFormat("HH:mm", Locale.US) : new SimpleDateFormat("h:mma", Locale.US)).format(new Date(nowMs)).toUpperCase(Locale.US));
         b.chip(0, 8, Board.CHIP_ORANGE);
+        // Header right: OPEN or CLOSED for the exchange-traded rows (crypto never closes), then the quote time.
+        String state = null;
+        for (Markets.Quote q : quotes) if (q.ok && q.state != null) { state = q.state; break; }
+        String time = (clock24 ? new SimpleDateFormat("HH:mm", Locale.US) : new SimpleDateFormat("h:mma", Locale.US)).format(new Date(nowMs)).toUpperCase(Locale.US);
+        b.textRight(0, state == null ? time : state + " " + time);
         int row = 1;
         for (Markets.Quote q : quotes) {
             if (row >= Board.ROWS) break;
