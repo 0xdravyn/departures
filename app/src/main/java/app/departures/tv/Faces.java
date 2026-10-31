@@ -24,8 +24,9 @@ public final class Faces {
         b.text(0, 0, date);
         b.textRight(0, time);
         if (w != null) {
-            b.set(1, 0, Board.weatherGlyph(w.condition, w.rain));
-            b.text(1, 2, w.now + "° " + w.condition);
+            String wx = w.now + "° " + w.condition;
+            b.text(1, 0, wx);
+            b.set(1, Math.min(Board.COLS - 1, wx.length() + 1), Board.weatherGlyph(w.condition, w.rain));   // the glyph after the words
             String hl = "HIGH " + w.high + "  LOW " + w.low;
             b.text(2, 0, hl);
             if (w.rain) b.textRight(2, "RAIN");
