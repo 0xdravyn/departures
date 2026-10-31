@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security concern
+    url: https://github.com/0xdravyn/departures/blob/main/SECURITY.md
+    about: Please read SECURITY.md first and leave the sensitive details out of the issue.
