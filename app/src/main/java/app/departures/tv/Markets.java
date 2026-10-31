@@ -22,11 +22,14 @@ final class Markets {
     static final class Quote { String label, key; double price; double changePct; boolean ok; String state; }
     private static final long FRESH_MS = 10 * 60_000L;
 
-    static List<Quote> load(Context ctx, Config cfg, boolean allowNetwork) {
+    static List<Quote> load(Context ctx, Config cfg, boolean allowNetwork) { return load(ctx, cfg, allowNetwork, false); }
+
+    /** force skips the 10-minute cache: used while the Markets face is on screen so a change can be watched. */
+    static List<Quote> load(Context ctx, Config cfg, boolean allowNetwork, boolean force) {
         if (cfg.markets.isEmpty()) return new ArrayList<>();
         File cache = new File(ctx.getFilesDir(), "markets.json");
         List<Quote> cached = read(cache, cfg);
-        if (cached != null && System.currentTimeMillis() - cache.lastModified() < FRESH_MS) return cached;
+        if (!force && cached != null && System.currentTimeMillis() - cache.lastModified() < FRESH_MS) return cached;
         if (!allowNetwork) return cached == null ? new ArrayList<>() : cached;
         List<Quote> out = new ArrayList<>();
         JSONObject gecko = geckoPrices(cfg);
@@ -38,7 +41,7 @@ final class Markets {
                 if (c != null && c.has("usd")) { q.price = c.optDouble("usd"); q.changePct = c.optDouble("usd_24h_change", 0); q.ok = true; }
             } else {
                 double[] p = yahoo(m.symbol);
-                if (p != null) { q.price = p[0]; q.changePct = p[1]; q.ok = true; q.state = m.symbol.endsWith("-USD") ? null : (p[2] == 1 ? "OPEN" : "CLOSED"); }
+                if (p != null) { q.price = p[0]; q.changePct = p[1]; q.ok = true; q.state = p[2] == 1 ? "OPEN" : "CLOSED"; }
             }
             if (!q.ok && cached != null) for (Quote old : cached) if (q.key.equals(old.key) && old.ok) { q = old; break; }
             any |= q.ok;

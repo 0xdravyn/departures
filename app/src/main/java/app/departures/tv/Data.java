@@ -37,6 +37,15 @@ final class Data {
         bg.post(refresh);                   // then the network, and every five minutes after that
     }
 
+    /** Fresh quotes now, cache or not: the Markets face asks for this part-way through its minute. */
+    void refreshQuotes() {
+        if (bg == null) return;
+        bg.post(() -> {
+            List<Markets.Quote> qs = Markets.load(ctx, cfg, true, true);
+            if (!qs.isEmpty()) { quotes = qs; ui.post(() -> listener.onData(this)); }
+        });
+    }
+
     void stop() { if (bg != null) bg.removeCallbacksAndMessages(null); if (thread != null) thread.quitSafely(); thread = null; bg = null; }
 
     private void refreshNow(boolean network) {

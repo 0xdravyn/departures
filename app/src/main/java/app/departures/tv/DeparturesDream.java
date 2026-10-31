@@ -18,7 +18,8 @@ public final class DeparturesDream extends DreamService implements Data.Listener
     private Config cfg;
     private Data data;
 
-    private final Runnable rotate = new Runnable() { @Override public void run() { cycle.next(data); show(true); ui.postDelayed(this, cycle.delayMs(cfg)); } };
+    private final Runnable quotesMidView = () -> { if (cycle.face == FaceCycle.MARKETS && data != null) data.refreshQuotes(); };
+    private final Runnable rotate = new Runnable() { @Override public void run() { cycle.next(data); show(true); if (cycle.face == FaceCycle.MARKETS) ui.postDelayed(quotesMidView, cycle.delayMs(cfg) / 2); ui.postDelayed(this, cycle.delayMs(cfg)); } };
     private final Runnable minute = new Runnable() { @Override public void run() { if (cycle.face != FaceCycle.KEEP_WATCHING) show(true); applyQuiet(); ui.postDelayed(this, msToNextMinute()); } };
 
     @Override public void onAttachedToWindow() {

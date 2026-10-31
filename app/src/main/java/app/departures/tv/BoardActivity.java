@@ -29,7 +29,7 @@ public final class BoardActivity extends Activity implements Data.Listener {
 
     private final Runnable rotate = new Runnable() {
         @Override public void run() {
-            if (System.currentTimeMillis() >= manualUntil) { if (data != null) cycle.next(data); else cycle.set((cycle.face + 1) % 3); show(true); }
+            if (System.currentTimeMillis() >= manualUntil) { if (data != null) cycle.next(data); else cycle.set((cycle.face + 1) % 3); show(true); if (cycle.face == FaceCycle.MARKETS && data != null) ui.postDelayed(() -> { if (cycle.face == FaceCycle.MARKETS) data.refreshQuotes(); }, cycle.delayMs(cfg) / 2); }
             ui.postDelayed(this, cycle.delayMs(cfg));
         }
     };

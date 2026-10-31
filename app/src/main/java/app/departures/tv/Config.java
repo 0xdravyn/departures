@@ -26,12 +26,12 @@ public final class Config {
     public int quietFromMin = 23 * 60, quietToMin = 7 * 60;   // minutes after midnight
     public float quietDim = 0.3f;
     public final List<Calendar> calendars = new ArrayList<>();
-    public int nowSeconds = 60, keepWatchingSeconds = 30, marketsSeconds = 30;
+    public int nowSeconds = 60, keepWatchingSeconds = 30, marketsSeconds = 60;
     public static final class Market { public final String label, source, symbol; Market(String l, String s, String y) { label = l; source = s; symbol = y; } }
     public final List<Market> markets = new ArrayList<>();
     public boolean present;
     /** The public defaults when the config has no "markets" key at all; an empty list in the config turns the face off. */
-    static final List<Market> DEFAULT_MARKETS = List.of(new Market("S&P 500", "yahoo", "^GSPC"), new Market("NVIDIA", "yahoo", "NVDA"), new Market("BITCOIN", "yahoo", "BTC-USD"), new Market("GOLD", "yahoo", "GC=F"));
+    static final List<Market> DEFAULT_MARKETS = List.of(new Market("S&P 500", "yahoo", "^GSPC"), new Market("NVIDIA", "yahoo", "NVDA"), new Market("BITCOIN", "coingecko", "bitcoin"), new Market("GOLD", "yahoo", "GC=F"));
     /** How far ahead the next-event rows look: 0 shows today only, 1 (default) falls back to tomorrow's first event once today is done. */
     public int lookaheadDays = 1;
 
@@ -55,7 +55,7 @@ public final class Config {
                 if (url.startsWith("https://")) c.calendars.add(new Calendar(e.optString("label", ""), url));
             }
             JSONObject faces = o.optJSONObject("faces");
-            if (faces != null) { c.nowSeconds = Math.max(10, faces.optInt("now_seconds", 60)); c.keepWatchingSeconds = Math.max(10, faces.optInt("keep_watching_seconds", faces.optInt("up_next_seconds", 30))); c.marketsSeconds = Math.max(10, faces.optInt("markets_seconds", 30)); }
+            if (faces != null) { c.nowSeconds = Math.max(10, faces.optInt("now_seconds", 60)); c.keepWatchingSeconds = Math.max(10, faces.optInt("keep_watching_seconds", faces.optInt("up_next_seconds", 30))); c.marketsSeconds = Math.max(10, faces.optInt("markets_seconds", 60)); }
             JSONArray mk = o.optJSONArray("markets");
             if (mk != null) for (int i = 0; i < mk.length() && c.markets.size() < 4; i++) { Market m = market(mk.opt(i)); if (m != null) c.markets.add(m); }
             if (mk == null) c.markets.addAll(DEFAULT_MARKETS);
@@ -82,7 +82,9 @@ public final class Config {
         }
         if (!(entry instanceof String)) return null;
         String s = ((String) entry).trim(); if (s.isEmpty()) return null;
-        if (s.toLowerCase(java.util.Locale.US).startsWith("coingecko:")) { String id = s.substring(10).trim().toLowerCase(java.util.Locale.US); return new Market(id.toUpperCase(java.util.Locale.US), "coingecko", id); }
+        String lower = s.toLowerCase(java.util.Locale.US);
+        if (lower.startsWith("coingecko:")) { String id = s.substring(10).trim().toLowerCase(java.util.Locale.US); return new Market(id.toUpperCase(java.util.Locale.US), "coingecko", id); }
+        if (lower.startsWith("yahoo:")) { String sym = s.substring(6).trim(); return new Market(sym.toUpperCase(java.util.Locale.US), "yahoo", sym); }
         switch (s.toUpperCase(java.util.Locale.US).replace("&", "AND").replace(" ", "")) {
             case "SANDP500": case "SP500": case "SPX": return new Market("S&P 500", "yahoo", "^GSPC");
             case "NASDAQ": case "NASDAQ100": return new Market("NASDAQ", "yahoo", "^IXIC");
@@ -90,15 +92,20 @@ public final class Config {
             case "GOLD": return new Market("GOLD", "yahoo", "GC=F");
             case "SILVER": return new Market("SILVER", "yahoo", "SI=F");
             case "OIL": case "CRUDE": return new Market("OIL", "yahoo", "CL=F");
-            case "BTC": case "BITCOIN": return new Market("BITCOIN", "yahoo", "BTC-USD");
-            case "ETH": case "ETHEREUM": return new Market("ETHEREUM", "yahoo", "ETH-USD");
-            case "SOL": case "SOLANA": return new Market("SOLANA", "yahoo", "SOL-USD");
+            case "BTC": case "BITCOIN": return new Market("BITCOIN", "coingecko", "bitcoin");
+            case "ETH": case "ETHEREUM": return new Market("ETHEREUM", "coingecko", "ethereum");
+            case "SOL": case "SOLANA": return new Market("SOLANA", "coingecko", "solana");
+            case "HYPE": case "HYPERLIQUID": return new Market("HYPE", "coingecko", "hyperliquid");
+            case "XRP": return new Market("XRP", "coingecko", "ripple");
+            case "DOGE": case "DOGECOIN": return new Market("DOGE", "coingecko", "dogecoin");
             case "NVIDIA": return new Market("NVIDIA", "yahoo", "NVDA");
             case "GOOGLE": case "ALPHABET": return new Market("GOOGLE", "yahoo", "GOOGL");
             case "APPLE": return new Market("APPLE", "yahoo", "AAPL");
             case "TESLA": return new Market("TESLA", "yahoo", "TSLA");
             default: break;
         }
+        // A lower-case word is a CoinGecko id ("purr-2"); anything else is a Yahoo symbol (NVDA, ^GSPC, GC=F).
+        if (s.equals(lower) && lower.matches("[a-z0-9-]+")) return new Market(s.toUpperCase(java.util.Locale.US), "coingecko", lower);
         return new Market(s.toUpperCase(java.util.Locale.US), "yahoo", s.toUpperCase(java.util.Locale.US));
     }
 

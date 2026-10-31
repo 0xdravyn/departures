@@ -24,7 +24,7 @@
   "faces": {
     "now_seconds": 60,
     "keep_watching_seconds": 30,
-    "markets_seconds": 30
+    "markets_seconds": 60
   },
   "markets": [
     "S&P 500",
