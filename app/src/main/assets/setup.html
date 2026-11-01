@@ -31,7 +31,11 @@
   .tabnote { color:var(--dim); font-size:14px; margin:14px 0 0; }
   section { margin-top:26px; border-top:1px solid var(--line); padding-top:18px; }
   section:first-of-type { border-top:0; margin-top:8px; }
-  h2 { margin:0 0 12px; font-size:12px; letter-spacing:.28em; color:var(--dim); font-weight:700; }
+  h2 { margin:0 0 12px; font-size:12px; letter-spacing:.28em; color:var(--dim); font-weight:700; cursor:pointer; display:flex; align-items:center; gap:10px; user-select:none; }
+  h2::before { content:''; width:7px; height:7px; border-right:2px solid var(--dim); border-bottom:2px solid var(--dim); transform:rotate(45deg) translate(-2px,-2px); transition:transform .15s; flex:none; }
+  section.closed h2::before { transform:rotate(-45deg) translate(-1px,1px); }
+  section.closed > :not(h2) { display:none; }
+  section.closed h2 { margin-bottom:0; }
   .row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; }
   .row + .row { border-top:1px solid var(--line); }
   .row label.name { flex:1; font-weight:600; }
@@ -120,8 +124,8 @@
       <div class="row"><label class="name">Temperature</label><div class="seg" id="units"><span class="on" data-v="c">°C</span><span data-v="f">°F</span></div></div>
     </section>
 
-    <section>
-      <h2>TODAY VIEW · CALENDARS</h2>
+    <section id="sec-calendars">
+      <h2>TODAY VIEW · CALENDARS OR CUSTOM MESSAGE</h2>
       <p class="help">The Today view shows your next event under the date, time and weather. To connect a calendar:</p>
       <ol class="steps">
         <li>Open Google Calendar on the web, then Settings, and pick the calendar on the left.</li>
@@ -129,7 +133,7 @@
         <li>Paste it below, hit Test, then APPLY.</li>
       </ol>
       <p class="help">Your calendar details are stored locally on the TV only.</p>
-      <div class="row"><label class="name">Under the weather, show</label><div class="seg" id="todayseg"><span class="on" data-v="calendars">Calendar events</span><span data-v="message">Two lines of mine</span></div></div>
+      <div class="row"><label class="name">Under the weather, show</label><div class="seg" id="todayseg"><span class="on" data-v="calendars">Calendar events</span><span data-v="message">Custom message</span></div></div>
       <div id="calblock">
         <div id="cals"></div>
         <span class="btn ghost" id="addcal">+ Add another calendar (up to three)</span>
@@ -144,7 +148,7 @@
     <section id="sec-message">
       <h2>CUSTOM MESSAGE VIEW</h2>
       <div class="board" id="board"></div>
-      <div class="count">22 × 6 · a chip takes one cell</div>
+      <div class="count">22 × 6 · a chip or a space takes one cell</div>
       <div class="chips" id="chips"><i data-c="r" style="background:var(--red)"></i><i data-c="o" style="background:var(--orange)"></i><i data-c="y" style="background:var(--yellow)"></i><i data-c="g" style="background:var(--green)"></i><i data-c="b" style="background:var(--blue)"></i><i data-c="v" style="background:var(--violet)"></i><i data-c="w" style="background:var(--white)"></i></div>
       <div class="field"><input class="msg" type="text" maxlength="44" placeholder="Line 1"></div>
       <div class="field"><input class="msg" type="text" maxlength="44" placeholder="Line 2"></div>
@@ -171,7 +175,7 @@
   <div class="tab" id="settings">
     <p class="tabnote">The same settings as on the TV (hold OK on the remote), in one place.</p>
 
-    <section>
+    <section id="set-views">
       <h2>VIEWS</h2>
       <p class="help">Which views the board cycles through, and for how long each stays.</p>
       <div class="row"><label class="name">Today <span class="edit" data-go="sec-today">Edit</span></label><select class="secs" data-k="today"></select><div class="toggle on vtoggle" data-k="today"></div></div>
@@ -181,13 +185,13 @@
       <p class="help" style="margin-top:10px" id="watchnext">Keep watching? reads the TV's own Continue watching row.</p>
     </section>
 
-    <section>
+    <section id="set-board">
       <h2>BOARD</h2>
       <div class="row"><label class="name">Flip animation</label><div class="seg" id="flips"><span data-v="off">Off</span><span class="on" data-v="on">On</span></div></div>
       <div class="row"><label class="name">Brightness</label><div class="seg" id="bright"><span class="on" data-v="1">Full</span><span data-v="0.8">80%</span><span data-v="0.6">60%</span><span data-v="0.4">40%</span></div></div>
     </section>
 
-    <section>
+    <section id="set-quiet">
       <h2>QUIET HOURS</h2>
       <p class="help">Dims the board between these times, so it fades into the room at night.</p>
       <div class="row"><label class="name">Quiet hours</label><div class="toggle on" id="quiet"></div></div>
@@ -195,7 +199,7 @@
       <div class="row"><label class="name">Until</label><input type="time" id="qto" value="07:00"></div>
     </section>
 
-    <section>
+    <section id="set-screensaver">
       <h2>SCREENSAVER MODE</h2>
       <p class="help">Departures runs as an app from your home screen any time. Screensaver mode also starts it by itself when the TV sits idle.</p>
       <div class="status">TV screensaver now: <b id="sscur">…</b></div>
@@ -243,10 +247,14 @@
 
   async function refresh() { state = await api('state'); render(); }
 
+  // ----- sections fold on their heading; what is folded is remembered on this device -----
+  let closed = new Set(); try { closed = new Set(JSON.parse(localStorage.getItem('departures_closed') || '[]')); } catch (e) {}
+  $$('section[id]').forEach(sec => { if (closed.has(sec.id)) sec.classList.add('closed'); sec.querySelector('h2').addEventListener('click', () => { sec.classList.toggle('closed'); if (sec.classList.contains('closed')) closed.add(sec.id); else closed.delete(sec.id); try { localStorage.setItem('departures_closed', JSON.stringify([...closed])); } catch (e) {} }); });
+  const open = sec => { if (!sec) return; sec.classList.remove('closed'); closed.delete(sec.id); try { localStorage.setItem('departures_closed', JSON.stringify([...closed])); } catch (e) {} };
   // ----- tabs, segmented controls, toggles -----
   $$('.tabs button').forEach(b => b.addEventListener('click', () => { $$('.tabs button').forEach(x => x.classList.toggle('on', x === b)); $$('.tab').forEach(t => t.classList.toggle('on', t.id === b.dataset.tab)); window.scrollTo(0, 0); }));
   document.addEventListener('click', e => {
-    const ed = e.target.closest('.edit'); if (ed) { $('.tabs button[data-tab=content]').click(); const sec = document.getElementById(ed.dataset.go); if (sec) sec.scrollIntoView({ behavior: 'smooth' }); return; }
+    const ed = e.target.closest('.edit'); if (ed) { $('.tabs button[data-tab=content]').click(); const sec = document.getElementById(ed.dataset.go); open(sec); if (sec) sec.scrollIntoView({ behavior: 'smooth' }); return; }
     const sp = e.target.closest('.seg span'); if (sp) { sp.parentElement.querySelectorAll('span').forEach(x => x.classList.toggle('on', x === sp)); if (sp.parentElement.id === 'todayseg') todayMode(); return; }
     const tg = e.target.closest('.toggle'); if (tg) tg.classList.toggle('on');
   });
@@ -301,11 +309,25 @@
     while (cells.length < 22) cells.push({ ch: ' ' });
     return cells;
   }
+  // Cuts a line where its cells run out: the prefix of the text that fills at most `max` cells.
+  function fitCells(s, max) {
+    let cells = 0, i = 0; const up = (s || '');
+    while (i < up.length) {
+      const m = up.slice(i).toUpperCase().match(/^\{([ROYGBVW])\}/); let step = 1, counts = true;
+      if (m) step = 3;
+      else { const cp = up.codePointAt(i); const ch = String.fromCodePoint(cp); step = ch.length; const U = ch.toUpperCase(); if (!EMOJI[ch] && (cp > 0x24F || !FLAPS.includes(U))) counts = false; }
+      if (counts) { if (cells === max) break; cells++; }
+      i += step;
+    }
+    return up.slice(0, i);
+  }
+  function limit(inp, max) { const cut = fitCells(inp.value, max); if (cut !== inp.value) { const pos = Math.min(inp.selectionStart || cut.length, cut.length); inp.value = cut; inp.setSelectionRange(pos, pos); } }
   function draw() { board.innerHTML = ''; for (const inp of lines) for (const c of cellsOf(inp.value)) { const el = document.createElement('i'); if (c.chip) el.className = c.chip; else el.textContent = c.ch; board.appendChild(el); } }
-  lines.forEach(l => l.addEventListener('input', draw)); draw();
+  lines.forEach(l => { l.removeAttribute('maxlength'); l.addEventListener('input', () => { limit(l, 22); draw(); }); }); draw();
+  $$('.tline').forEach(l => { l.removeAttribute('maxlength'); l.addEventListener('input', () => limit(l, 21)); });
   let lastLine = lines[0];
   lines.forEach(l => l.addEventListener('focus', () => lastLine = l));
-  $('#chips').addEventListener('click', e => { const i = e.target.closest('i'); if (!i) return; const l = lastLine, p = l.selectionStart ?? l.value.length; l.value = l.value.slice(0, p) + '{' + i.dataset.c + '}' + l.value.slice(p); l.focus(); l.setSelectionRange(p + 3, p + 3); draw(); });
+  $('#chips').addEventListener('click', e => { const i = e.target.closest('i'); if (!i) return; const l = lastLine, p = l.selectionStart ?? l.value.length; l.value = l.value.slice(0, p) + '{' + i.dataset.c + '}' + l.value.slice(p); l.focus(); l.setSelectionRange(p + 3, p + 3); limit(l, 22); draw(); });
 
   // ----- markets: five symbols, each looked up by the TV -----
   const mk = $('#markets');

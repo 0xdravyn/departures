@@ -9,3 +9,7 @@ Departures handles one kind of secret: the iCal addresses of your calendars. Any
 - Never commit your `config.json`, keystores or `keystore.properties`; the `.gitignore` covers them. Keep `config.example.json` free of real addresses.
 
 To report a problem, open a GitHub issue without the sensitive details and say you have a security concern; the maintainer will follow up privately.
+
+## The setup page
+
+While Departures is on screen, the TV serves its setup page on port 8787 to the local network only (it binds the TV's own address; nothing is exposed beyond your router). Every API request must carry the four-digit code shown on the TV, checked on the TV for each request; the page only reflects the answer. There is no account and no session beyond that code, which the owner can replace from the TV's settings. Calendar addresses are written to the TV's private storage and are never returned by any endpoint, logged, or echoed in an error. Requests are limited to 64 KB, served over plain HTTP because a local address cannot carry a public certificate, and the page loads no external resources. Anyone on your Wi-Fi who can read the code off the TV screen can change the board; that is the intended trust boundary of a home or shop network.

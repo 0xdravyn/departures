@@ -140,7 +140,7 @@ public final class Config {
         out.put("calendars", cals);
         JSONObject today = in.optJSONObject("today");
         JSONArray tl = new JSONArray();
-        if (today != null) { JSONArray lines = today.optJSONArray("lines"); for (int i = 0; i < 2; i++) tl.put(lines == null ? "" : clip(lines.optString(i, ""), Board.COLS - 1)); }
+        if (today != null) { JSONArray lines = today.optJSONArray("lines"); for (int i = 0; i < 2; i++) tl.put(lines == null ? "" : clip(lines.optString(i, ""), 44)); }   // cells are limited on the board; a chip is three characters
         else { tl.put(""); tl.put(""); }
         out.put("today", new JSONObject().put("mode", today != null && "message".equals(today.optString("mode")) ? "message" : "calendars").put("lines", tl));
         JSONArray msg = new JSONArray();
