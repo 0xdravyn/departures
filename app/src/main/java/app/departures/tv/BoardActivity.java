@@ -66,7 +66,9 @@ public final class BoardActivity extends Activity implements Data.Listener {
     @Override public void onData(Data d) { show(view.getWidth() > 0); }
 
     private Board sample() {
-        long now = System.currentTimeMillis();
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        c.set(java.util.Calendar.HOUR_OF_DAY, 15); c.set(java.util.Calendar.MINUTE, 23); c.set(java.util.Calendar.SECOND, 0);
+        long now = c.getTimeInMillis();   // today's date at a fixed afternoon time: stills come out the same whenever they are shot
         if (cycle.face == FaceCycle.KEEP_WATCHING) return Faces.keepWatching(Faces.sampleResume());
         if (cycle.face == FaceCycle.MARKETS) return Faces.markets(Faces.sampleQuotes(), now, false);
         if (cycle.face == FaceCycle.MESSAGE) return Faces.message(Faces.sampleMessage());
