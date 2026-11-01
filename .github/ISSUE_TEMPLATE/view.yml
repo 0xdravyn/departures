@@ -1,0 +1,20 @@
+name: New view or idea
+description: Propose a view for the board, a data source, or another change. Read CONTRIBUTING.md first.
+labels: [enhancement]
+body:
+  - type: textarea
+    attributes:
+      label: What the board would show
+      description: Sketch the 22 by 6 grid in text if you can, one line per row.
+      placeholder: |
+        WEEK                  
+        MON  DENTIST    9AM   
+    validations: { required: true }
+  - type: input
+    attributes:
+      label: Where the data comes from
+      description: A public endpoint without a key, a calendar, the TV itself. Nothing that needs an account.
+  - type: dropdown
+    attributes:
+      label: Would you build it?
+      options: ["Yes, I'd open the pull request", "No, just the idea"]
