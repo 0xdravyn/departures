@@ -37,7 +37,7 @@ A 22 by 6 board of flaps on a true black background, so an OLED keeps most of it
 
 The clock, the date and your message work offline; the weather, calendars and markets need Wi-Fi, and the last readings stay on the board while it is down. The screenshots are the app's demo mode, with sample data.
 
-## Two ways to run it
+## Run it as an app or a screensaver
 
 **As an app.** Open Departures from the home screen; it holds the screen on until you press Back. Good for a bar, a shop, a studio or a hallway. Some TVs switch off after a few hours without a remote press whatever is running (Sony: Settings > System > Power > Idle TV standby); turn that off for all-day use.
 
