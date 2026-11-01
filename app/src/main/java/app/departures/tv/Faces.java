@@ -61,15 +61,8 @@ public final class Faces {
             String more = n > 1 ? "+" + (n - 1) : "";
             b.text(4, 1, fit(e.title, Board.COLS - 1 - (more.isEmpty() ? 0 : more.length() + 1)));
             if (!more.isEmpty()) b.textRight(4, more);
-            // Row 6: the time and countdown on the left, the calendar label on the right, never overlapping:
-            // the label keeps its place and the countdown gives way (minutes first, then the whole countdown).
-            String label = e.label == null ? "" : e.label.toUpperCase(Locale.US);
-            int room = Board.COLS - 1 - (label.isEmpty() ? 0 : label.length() + 2);
-            String w5 = when(nowMs, e, cfg.clock24);
-            if (w5.length() > room) w5 = w5.replaceAll(" \\d+M$", "");
-            if (w5.length() > room) w5 = w5.replaceAll("  IN .*$", "");
-            b.text(5, 1, fit(w5, room));
-            if (!label.isEmpty()) b.textRight(5, label);
+            // Row 6: the time and countdown. The calendar's name stays on the settings page; the board shows only the event.
+            b.text(5, 1, fit(when(nowMs, e, cfg.clock24), Board.COLS - 1));
         } else if (cfg.calendars.isEmpty()) {
             b.text(4, 1, "ADD A CALENDAR");
             b.text(5, 1, "ON THE SETTINGS PAGE");
@@ -200,7 +193,7 @@ public final class Faces {
     // ----- samples, for the demo (--ez demo true) and documentation -----
 
     public static Weather sampleWeather() { Weather w = new Weather(); w.now = 12; w.high = 14; w.low = 8; w.condition = "PARTLY CLOUDY"; w.rain = true; return w; }
-    public static Event sampleEvent(long nowMs) { Event e = new Event(); e.title = "Dinner with Sam"; e.label = "HOME"; e.startMs = nowMs + 72 * 60000L; e.endMs = e.startMs + 3600000L; return e; }
+    public static Event sampleEvent(long nowMs) { Event e = new Event(); e.title = "Dinner with Sam"; e.label = ""; e.startMs = nowMs + 72 * 60000L; e.endMs = e.startMs + 3600000L; return e; }
     public static List<Markets.Quote> sampleQuotes() {
         List<Markets.Quote> l = new java.util.ArrayList<>();
         Object[][] s = {{"S&P 500", 7580.07, -0.57}, {"NVIDIA", 204.64, -3.0}, {"GOOGLE", 279.84, 1.2}, {"BITCOIN", 77499.0, 1.08}, {"GOLD", 3898.9, -0.4}};

@@ -23,10 +23,7 @@ import android.view.View;
  *
  * Every glyph stays inside its bit: a wide character (%, W, M) is narrowed to the printable width of the tile,
  * as the character on a real flap is printed to fit. Nothing spills over the edge.
- *
- * Scatter: every 10 to 30 seconds, one to four blank bits flutter through a few flaps and settle blank again,
- * at slightly different moments, so a face that stays up for a minute still looks like a machine and not a
- * picture. Off with the flips, and off by the setting.
+
  */
 public final class BoardView extends View {
     private static final long FLAP_MS = 38;          // one intermediate flap
@@ -42,50 +39,16 @@ public final class BoardView extends View {
     private final long[] flipStart = new long[Board.ROWS * Board.COLS];
     private final int[] flipFrom = new int[Board.ROWS * Board.COLS];
     private final int[] flipSteps = new int[Board.ROWS * Board.COLS];
-    private final long[] twitchStart = new long[Board.ROWS * Board.COLS];
-    private final int[] twitchSteps = new int[Board.ROWS * Board.COLS];
     private boolean animating;
     private float dim = 1f;
     private boolean flips = true;
-    private boolean scatter = true;
-    private final java.util.Random random = new java.util.Random();
-    private final Runnable scatterTick = this::scatterOnce;
 
     /** Off: changes appear at once, for anyone who finds the motion too much. */
-    public void setFlips(boolean on) { flips = on; if (!on) stopScatter(); else scheduleScatter(); }
-
-    /** The random scatter effect: a few blank bits flip on their own now and then. */
-    public void setScatter(boolean on) { scatter = on; if (on) scheduleScatter(); else stopScatter(); }
-
-    private void scheduleScatter() {
-        removeCallbacks(scatterTick);
-        if (scatter && flips && isAttachedToWindow()) postDelayed(scatterTick, 10_000L + random.nextInt(20_001));
-    }
-
-    private void stopScatter() { removeCallbacks(scatterTick); java.util.Arrays.fill(twitchSteps, 0); }
+    public void setFlips(boolean on) { flips = on; }
 
     /** Per character, at the current size: how much to narrow it to fit the bit, and where its middle sits. */
     private float glyphSize = -1;
     private final float[] glyphScale = new float[256], glyphMid = new float[256];
-
-    /** One round: one to four blank bits, each starting within the next 0.6 s, each three to six flaps. */
-    private void scatterOnce() {
-        if (!animating) {
-            int want = 1 + random.nextInt(4);
-            for (int tries = 0; tries < 40 && want > 0; tries++) {
-                final int i = random.nextInt(Board.ROWS * Board.COLS);
-                if (shown.cells[i] != ' ' || target.cells[i] != ' ' || twitchSteps[i] != 0) continue;
-                twitchSteps[i] = -1;   // claimed; starts when its delay is up
-                final int steps = 3 + random.nextInt(4);
-                postDelayed(() -> { if (twitchSteps[i] == -1 && shown.cells[i] == ' ' && target.cells[i] == ' ') { twitchStart[i] = SystemClock.uptimeMillis(); twitchSteps[i] = steps; animating = true; postInvalidateOnAnimation(); } else twitchSteps[i] = 0; }, random.nextInt(600));
-                want--;
-            }
-        }
-        scheduleScatter();   // a board mid-flip skips this round
-    }
-
-    @Override protected void onAttachedToWindow() { super.onAttachedToWindow(); scheduleScatter(); }
-    @Override protected void onDetachedFromWindow() { removeCallbacks(scatterTick); super.onDetachedFromWindow(); }
 
     public BoardView(Context ctx) {
         super(ctx);
@@ -113,7 +76,6 @@ public final class BoardView extends View {
         for (int i = 0; i < Board.ROWS * Board.COLS; i++) {
             char a = from.cells[i], z = target.cells[i];
             if (a == z) continue;
-            twitchSteps[i] = 0;   // a real change on this bit replaces a flutter
             int steps = Math.floorMod(Board.flapIndex(z) - Board.flapIndex(a), Board.flapCount());
             flipFrom[i] = Board.flapIndex(a);
             flipSteps[i] = Math.min(steps, MAX_STEPS);
@@ -155,14 +117,6 @@ public final class BoardView extends View {
                         int step = (int) (t / FLAP_MS);
                         if (step >= flipSteps[i]) { shown.cells[i] = target.cells[i]; ch = shown.cells[i]; }
                         else { ch = Board.flapAt(flipFrom[i] + step * Math.max(1, Math.floorMod(Board.flapIndex(target.cells[i]) - flipFrom[i], Board.flapCount()) / Math.max(1, flipSteps[i]))); still = false; }
-                    }
-                } else if (twitchSteps[i] > 0) {
-                    long t = now - twitchStart[i];
-                    if (t < 0) still = false;
-                    else {
-                        int step = (int) (t / FLAP_MS);
-                        if (step >= twitchSteps[i]) twitchSteps[i] = 0;
-                        else { ch = Board.flapAt(1 + step); still = false; }
                     }
                 }
                 RectF rect = cell; rect.set(x + 1, y, x + bitW - gap - 1, y + bitH);

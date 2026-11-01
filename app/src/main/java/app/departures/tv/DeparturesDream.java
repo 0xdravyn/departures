@@ -28,7 +28,7 @@ public final class DeparturesDream extends DreamService implements Data.Listener
         setInteractive(false); setFullscreen(true); setScreenBright(true);
         cfg = Config.load(this);
         view = new BoardView(this);
-        view.setFlips(cfg.flips); view.setScatter(cfg.scatter);
+        view.setFlips(cfg.flips);
         setContentView(view);
         data = new Data(this, cfg, this);
         view.setBoard(Faces.today(System.currentTimeMillis(), cfg, null, java.util.Collections.emptyList(), SetupServer.addressLine(), data.pairCode));
@@ -45,7 +45,7 @@ public final class DeparturesDream extends DreamService implements Data.Listener
     /** The settings page applied something: re-read everything and show it at once. */
     private void reload() {
         if (view == null) return;
-        cfg = Config.load(this); view.setFlips(cfg.flips); view.setScatter(cfg.scatter);
+        cfg = Config.load(this); view.setFlips(cfg.flips);
         if (data != null) data.stop(); data = new Data(this, cfg, this); data.start();
         if (!cfg.viewOn(cycle.face)) cycle.next(data, cfg);
         ui.removeCallbacks(minute); ui.postDelayed(minute, msToNextTick(cfg));

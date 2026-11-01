@@ -49,10 +49,10 @@ About ten minutes: a few commands from a computer to install the app, then every
 
 You need an Android TV or Google TV on Android 8.0 or newer (built on a Sony BRAVIA with Google TV 12; Samsung, LG and Fire TV cannot run it), a computer on the same Wi-Fi, `adb` (Android platform tools), and USB debugging switched on in the TV's Developer options (Settings > System > About, press OK on the build number seven times, then back one level).
 
-1. **Install.** Download `departures-v0.1.0.apk` from the latest [release](https://github.com/0xdravyn/departures/releases), or build it yourself (`./gradlew assembleRelease`, JDK 17 and the Android SDK), then:
+1. **Install.** Download `departures-v0.1.1.apk` from the latest [release](https://github.com/0xdravyn/departures/releases), or build it yourself (`./gradlew assembleRelease`, JDK 17 and the Android SDK), then:
    ```bash
    adb connect <tv-ip>:5555
-   adb install -r departures-v0.1.0.apk
+   adb install -r departures-v0.1.1.apk
    ```
    If Departures does not appear on the home screen (TVs with a second profile keep per-user install state), run `adb shell pm install-existing --user 0 app.departures.tv`.
 2. **Grant what it cannot ask for itself**: Watch Next for the Keep watching? view, and the two settings that let it become the screensaver.
@@ -74,11 +74,11 @@ Without step 2, Keep watching? stays off and the screensaver switch is two ADB l
 The TV serves it on your Wi-Fi while the board is on screen. Hold OK on the board (or press the remote's Menu button) and the first row shows the address (`http://<tv>:8787`) and a four-digit code; a TV with nothing set up yet shows them on the board itself. Open the address on a computer, enter the code, and everything is there in two tabs:
 
 - **Content**: your city (type it, pick it from the list), 12 or 24-hour clock, Celsius or Fahrenheit, up to three calendars (name and secret address, with a Test button), two lines of your own in place of the calendar rows, the custom message with a live preview, and up to five markets, each looked up before it reaches the board.
-- **Settings**: which views and for how long, the flip animation, the random scatter effect (a few blank tiles flip on their own now and then), seconds on the clock, brightness, quiet hours, and screensaver mode with its idle delay.
+- **Settings**: which views and for how long, the flip animation, seconds on the clock, brightness, quiet hours, and screensaver mode with its idle delay.
 
 Each tab has its own reset. The TV checks the code on every request; your computer remembers it for thirty days. Calendar addresses go in and never come back out.
 
-**On the TV itself.** The same Settings tab, with the remote: hold OK on the board. One row per view, the flip animation, the scatter effect, seconds, brightness, clock, units, quiet hours, screensaver mode and the idle delay, plus the address and code (OK on that row makes a new code). The app and the screensaver share these settings.
+**On the TV itself.** The same Settings tab, with the remote: hold OK on the board. One row per view, the flip animation, seconds, brightness, clock, units, quiet hours, screensaver mode and the idle delay, plus the address and code (OK on that row makes a new code). The app and the screensaver share these settings.
 
 ## Security
 

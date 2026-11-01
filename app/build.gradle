@@ -11,7 +11,7 @@ android {
     namespace 'app.departures.tv'
     compileSdk 34
     buildFeatures { aidl false }
-    defaultConfig { applicationId 'app.departures.tv'; minSdk 26; targetSdk 34; versionCode 1; versionName '0.1.0' }
+    defaultConfig { applicationId 'app.departures.tv'; minSdk 26; targetSdk 34; versionCode 2; versionName '0.1.1' }
     signingConfigs {
         if (ks.storeFile) release { storeFile file(ks.storeFile); storePassword ks.storePassword; keyAlias ks.keyAlias; keyPassword ks.keyPassword }
     }

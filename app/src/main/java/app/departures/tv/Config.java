@@ -56,8 +56,6 @@ public final class Config {
     public boolean flips = true;
     /** Seconds on the clock (Today and Markets), ticking every second. */
     public boolean clockSeconds;
-    /** Now and then a few blank bits flip on their own, as on a board that is alive. */
-    public boolean scatter = true;
 
     static File file(Context ctx) { return new File(ctx.getFilesDir(), "config.json"); }
 
@@ -117,7 +115,6 @@ public final class Config {
         c.brightness = Math.max(0.4f, Math.min(1f, p.getFloat("brightness", 1f)));
         c.flips = p.getBoolean("flips", true);
         c.clockSeconds = p.getBoolean("clock_seconds", false);
-        c.scatter = p.getBoolean("scatter", true);
         return c;
     }
 

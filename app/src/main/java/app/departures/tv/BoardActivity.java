@@ -43,7 +43,7 @@ public final class BoardActivity extends Activity implements Data.Listener {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         cfg = Config.load(this);
         view = new BoardView(this);
-        view.setFlips(cfg.flips); view.setScatter(cfg.scatter);
+        view.setFlips(cfg.flips);
         android.widget.FrameLayout root = new android.widget.FrameLayout(this);
         root.addView(view, new android.widget.FrameLayout.LayoutParams(-1, -1));
         root.addView(hintView(), new android.widget.FrameLayout.LayoutParams(-1, -1));
@@ -126,7 +126,7 @@ public final class BoardActivity extends Activity implements Data.Listener {
     private void reload() {
         if (view == null) return;
         cfg = Config.load(this);
-        view.setFlips(cfg.flips); view.setScatter(cfg.scatter);
+        view.setFlips(cfg.flips);
         if (data != null) { data.stop(); data = new Data(this, cfg, this); data.start(); }
         if (!cfg.viewOn(cycle.face)) cycle.set(nextOn(cycle.face));
         ui.removeCallbacks(minute); ui.postDelayed(minute, DeparturesDream.msToNextTick(cfg));
