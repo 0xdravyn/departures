@@ -170,7 +170,7 @@ final class SetupServer {
                 .put("keep_watching", new JSONObject().put("on", c.keepWatchingOn).put("seconds", c.keepWatchingSeconds))
                 .put("markets", new JSONObject().put("on", c.marketsOn).put("seconds", c.marketsSeconds))
                 .put("message", new JSONObject().put("on", c.messageOn).put("seconds", c.messageSeconds));
-        JSONObject settings = new JSONObject().put("views", views).put("flips", c.flips).put("brightness", c.brightness)
+        JSONObject settings = new JSONObject().put("views", views).put("flips", c.flips).put("brightness", c.brightness).put("clockSeconds", c.clockSeconds).put("scatter", c.scatter)
                 .put("quiet", new JSONObject().put("enabled", c.quietEnabled).put("from", hhmm(c.quietFromMin)).put("to", hhmm(c.quietToMin)))
                 .put("screensaver", new JSONObject().put("ours", Screensaver.isOurs(app)).put("current", Screensaver.currentName(app)).put("minutes", Screensaver.minutes(app))
                         .put("canSecure", Screensaver.canSecure(app)).put("canSystem", Screensaver.canSystem(app)).put("grantSecure", Screensaver.GRANT_SECURE).put("grantSystem", Screensaver.GRANT_SYSTEM));
@@ -192,6 +192,8 @@ final class SetupServer {
             }
         }
         if (in.has("flips")) e.putBoolean("flips", in.optBoolean("flips", true));
+        if (in.has("clockSeconds")) e.putBoolean("clock_seconds", in.optBoolean("clockSeconds", false));
+        if (in.has("scatter")) e.putBoolean("scatter", in.optBoolean("scatter", true));
         if (in.has("brightness")) e.putFloat("brightness", (float) Math.max(0.4, Math.min(1.0, in.optDouble("brightness", 1.0))));
         JSONObject quiet = in.optJSONObject("quiet");
         if (quiet != null) {

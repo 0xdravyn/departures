@@ -33,8 +33,8 @@ public final class Faces {
         Board b = new Board();
         Date d = new Date(nowMs);
         String date = new SimpleDateFormat("EEE d MMM", Locale.US).format(d).toUpperCase(Locale.US);
-        String time = cfg.clock24 ? new SimpleDateFormat("HH:mm", Locale.US).format(d)
-                : new SimpleDateFormat("h:mm a", Locale.US).format(d).replace("AM", " AM").replace("PM", " PM").replaceAll("  +", " ");
+        String time = cfg.clock24 ? new SimpleDateFormat(cfg.clockSeconds ? "HH:mm:ss" : "HH:mm", Locale.US).format(d)
+                : new SimpleDateFormat(cfg.clockSeconds ? "h:mm:ss a" : "h:mm a", Locale.US).format(d).replace("AM", " AM").replace("PM", " PM").replaceAll("  +", " ");
         b.text(0, 0, date);
         b.textRight(0, time);
         if (!cfg.present) {
@@ -49,9 +49,9 @@ public final class Faces {
             String wx = w.now + "° " + w.condition;
             b.text(1, 0, wx);
             b.set(1, Math.min(Board.COLS - 1, wx.length() + 1), Board.weatherGlyph(w.condition, w.rain));   // the glyph after the words
-            String hl = "HIGH " + w.high + "  LOW " + w.low;
+            String hl = "HIGH " + w.high + "°  LOW " + w.low + "°";
             b.text(2, 0, hl);
-            if (w.rain) b.textRight(2, "RAIN");
+            if (w.rain && hl.length() + 1 <= Board.COLS - 4) b.textRight(2, "RAIN");
         } else if (!cfg.hasLocation()) { b.text(1, 0, "WEATHER: SET LOCATION"); b.text(2, 0, "ON THE SETUP PAGE"); }
         b.chip(4, 0, Board.CHIP_BLUE); b.chip(5, 0, Board.CHIP_BLUE);
         if (cfg.todayMessage) {
@@ -116,12 +116,16 @@ public final class Faces {
      * direction, the label, the price and the change against the previous close (24 h for crypto).
      * Our own layout, not the Vestaboard channel's: chips on the left as on the other faces, percentages not points.
      */
-    public static Board markets(List<Markets.Quote> quotes, long nowMs, boolean clock24) {
+    public static Board markets(List<Markets.Quote> quotes, long nowMs, boolean clock24) { return markets(quotes, nowMs, clock24, false); }
+
+    public static Board markets(List<Markets.Quote> quotes, long nowMs, boolean clock24, boolean seconds) {
         Board b = new Board();
         // Header, centred: MARKETS @ time of the board; orange face chips at both ends. No open/closed word: a list
         // mixes exchange hours and crypto, which never closes. Then up to five rows.
-        String time = (clock24 ? new SimpleDateFormat("HH:mm", Locale.US) : new SimpleDateFormat("h:mma", Locale.US)).format(new Date(nowMs)).toUpperCase(Locale.US);
-        b.textCenter(0, "MARKETS @ " + time);
+        String time = new SimpleDateFormat(clock24 ? (seconds ? "HH:mm:ss" : "HH:mm") : (seconds ? "h:mm:ssa" : "h:mma"), Locale.US).format(new Date(nowMs)).toUpperCase(Locale.US);
+        String head = "MARKETS @ " + time;
+        if (head.length() > Board.COLS - 4) head = "MARKETS " + time;   // with seconds in 12-hour time, keep a bit clear of the corner chips
+        b.textCenter(0, head);
         b.chip(0, 0, Board.CHIP_ORANGE); b.chip(0, Board.COLS - 1, Board.CHIP_ORANGE);
         int row = 1;
         for (Markets.Quote q : quotes) {
@@ -203,6 +207,6 @@ public final class Faces {
         for (Object[] r : s) { Markets.Quote q = new Markets.Quote(); q.label = (String) r[0]; q.price = (Double) r[1]; q.changePct = (Double) r[2]; q.ok = true; q.state = "BITCOIN".equals(r[0]) ? null : "OPEN"; l.add(q); }
         return l;
     }
-    public static Resume sampleResume() { Resume r = new Resume(); r.title = "Kim's Convenience"; r.detail = "S3E6   11 min left"; r.app = "Netflix"; return r; }
+    public static Resume sampleResume() { Resume r = new Resume(); r.title = "Kim's Convenience"; r.detail = "S3E6   11 mins left"; r.app = "Netflix"; return r; }
     public static List<String> sampleMessage() { return List.of("{g} BACK AT 6", "", "DINNER IS IN THE OVEN", "{o} 180 FOR 40 MIN", "", "{r}{r}{r} LOVE YOU {r}{r}{r}"); }
 }

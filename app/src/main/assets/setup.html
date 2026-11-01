@@ -188,6 +188,9 @@
     <section id="set-board">
       <h2>BOARD</h2>
       <div class="row"><label class="name">Flip animation</label><div class="seg" id="flips"><span data-v="off">Off</span><span class="on" data-v="on">On</span></div></div>
+      <div class="row"><label class="name">Random scatter effect</label><div class="seg" id="scatter"><span data-v="off">Off</span><span class="on" data-v="on">On</span></div></div>
+      <p class="help">Every so often a few blank tiles flip on their own, the way a real board idles.</p>
+      <div class="row"><label class="name">Seconds on the clock</label><div class="seg" id="secs"><span class="on" data-v="off">Off</span><span data-v="on">On</span></div></div>
       <div class="row"><label class="name">Brightness</label><div class="seg" id="bright"><span class="on" data-v="1">Full</span><span data-v="0.8">80%</span><span data-v="0.6">60%</span><span data-v="0.4">40%</span></div></div>
     </section>
 
@@ -362,7 +365,7 @@
     $$('.market').forEach((d, i) => { const m = c.markets[i]; const inp = d.querySelector('.sym'); inp.value = m ? m.symbol : ''; d.querySelector('.mlabel').value = m && m.label !== m.symbol ? m.label : ''; const r = d.querySelector('.resolved'); r.textContent = ''; r.className = 'resolved'; if (inp.value) lookup(inp); });
     for (const k of ['today', 'keep_watching', 'markets', 'message']) { const v = s.views[k]; $('.vtoggle[data-k=' + k + ']').classList.toggle('on', v.on); const sel = $('select.secs[data-k=' + k + ']'); sel.value = SECONDS.includes(v.seconds) ? v.seconds : 60; }
     $('#watchnext').innerHTML = 'Keep watching? reads the TV\'s own Continue watching row. ' + (state.watchNext ? '<span class="ok">Permission granted.</span>' : '<span class="warn">Needs one line over ADB: adb shell pm grant app.departures.tv android.permission.READ_TV_LISTINGS</span>');
-    setSeg('flips', s.flips ? 'on' : 'off'); setSeg('bright', String(s.brightness)); if (!$('#bright span.on')) setSeg('bright', '1');
+    setSeg('flips', s.flips ? 'on' : 'off'); setSeg('scatter', s.scatter ? 'on' : 'off'); setSeg('secs', s.clockSeconds ? 'on' : 'off'); setSeg('bright', String(s.brightness)); if (!$('#bright span.on')) setSeg('bright', '1');
     $('#quiet').classList.toggle('on', s.quiet.enabled); $('#qfrom').value = s.quiet.from; $('#qto').value = s.quiet.to;
     const ss = s.screensaver; $('#sscur').textContent = ss.current; ssbtn.textContent = ss.ours ? 'Disable screensaver mode' : 'Enable screensaver mode'; if (ss.minutes > 0) ssmin.value = ss.minutes;
     $('#ssgrant').hidden = ss.canSecure && ss.canSystem; $('#ssgrantlines').textContent = (ss.canSecure ? '' : ss.grantSecure + '\n') + (ss.canSystem ? '' : ss.grantSystem);
@@ -377,7 +380,7 @@
         calendars: [...cals.children].map(d => ({ label: d.querySelector('.clabel').value, url: d.querySelector('.curl').value.trim(), saved: parseInt(d.dataset.saved, 10) })).filter(x => x.url || x.saved >= 0),
         message: lines.map(l => l.value), markets: $$('.market').map(d => ({ symbol: d.querySelector('.sym').value.trim(), label: d.querySelector('.mlabel').value.trim() })).filter(m => m.symbol) };
       const views = {}; for (const k of ['today', 'keep_watching', 'markets', 'message']) views[k] = { on: $('.vtoggle[data-k=' + k + ']').classList.contains('on'), seconds: parseInt($('select.secs[data-k=' + k + ']').value, 10) };
-      const settings = { views, flips: segVal('flips') === 'on', brightness: parseFloat(segVal('bright')), quiet: { enabled: $('#quiet').classList.contains('on'), from: $('#qfrom').value, to: $('#qto').value } };
+      const settings = { views, flips: segVal('flips') === 'on', scatter: segVal('scatter') === 'on', clockSeconds: segVal('secs') === 'on', brightness: parseFloat(segVal('bright')), quiet: { enabled: $('#quiet').classList.contains('on'), from: $('#qfrom').value, to: $('#qto').value } };
       await api('content', content); state = await api('settings', settings); render();
       btn.textContent = 'APPLIED'; btn.classList.add('done'); setTimeout(() => { btn.classList.remove('done'); btn.textContent = 'APPLY'; }, 1600);
     } catch (e) { toast('Could not reach the TV'); }

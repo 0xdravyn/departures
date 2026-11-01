@@ -36,14 +36,14 @@ public final class BoardActivity extends Activity implements Data.Listener {
             ui.postDelayed(this, cycle.delayMs(cfg));
         }
     };
-    private final Runnable minute = new Runnable() { @Override public void run() { if (cycle.face != FaceCycle.KEEP_WATCHING) show(true); applyQuiet(); ui.postDelayed(this, DeparturesDream.msToNextMinute()); } };
+    private final Runnable minute = new Runnable() { @Override public void run() { if (cycle.face != FaceCycle.KEEP_WATCHING) show(true); applyQuiet(); ui.postDelayed(this, DeparturesDream.msToNextTick(cfg)); } };
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         cfg = Config.load(this);
         view = new BoardView(this);
-        view.setFlips(cfg.flips);
+        view.setFlips(cfg.flips); view.setScatter(cfg.scatter);
         android.widget.FrameLayout root = new android.widget.FrameLayout(this);
         root.addView(view, new android.widget.FrameLayout.LayoutParams(-1, -1));
         root.addView(hintView(), new android.widget.FrameLayout.LayoutParams(-1, -1));
@@ -56,7 +56,7 @@ public final class BoardActivity extends Activity implements Data.Listener {
         else view.setBoard(sample());
         applyQuiet();
         ui.postDelayed(rotate, cycle.delayMs(cfg));
-        ui.postDelayed(minute, DeparturesDream.msToNextMinute());
+        ui.postDelayed(minute, DeparturesDream.msToNextTick(cfg));
     }
 
     @Override protected void onStart() { super.onStart(); SetupServer.get(this).retain(); SetupServer.onChange = reloader; }
@@ -124,9 +124,10 @@ public final class BoardActivity extends Activity implements Data.Listener {
     private void reload() {
         if (view == null) return;
         cfg = Config.load(this);
-        view.setFlips(cfg.flips);
+        view.setFlips(cfg.flips); view.setScatter(cfg.scatter);
         if (data != null) { data.stop(); data = new Data(this, cfg, this); data.start(); }
         if (!cfg.viewOn(cycle.face)) cycle.set(nextOn(cycle.face));
+        ui.removeCallbacks(minute); ui.postDelayed(minute, DeparturesDream.msToNextTick(cfg));
         manualUntil = 0; applyQuiet(); show(true);
     }
 

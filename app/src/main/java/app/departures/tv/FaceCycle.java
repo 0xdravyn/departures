@@ -34,7 +34,7 @@ final class FaceCycle {
     /** The board for the current face from what Data has; a face whose data vanished falls back to Today. */
     Board board(Data data, Config cfg, long now) {
         if (face == KEEP_WATCHING && data.resume != null) return Faces.keepWatching(data.resume);
-        if (face == MARKETS && (hasQuotes(data) || !cfg.todayOn)) return Faces.markets(data.quotes, now, cfg.clock24);
+        if (face == MARKETS && (hasQuotes(data) || !cfg.todayOn)) return Faces.markets(data.quotes, now, cfg.clock24, cfg.clockSeconds);
         if (face == MESSAGE && (cfg.hasMessage() || !cfg.todayOn)) return Faces.message(cfg.message);
         return Faces.today(now, cfg, data.weather, data.nextEvents(now), data.setupAddress, data.pairCode);
     }

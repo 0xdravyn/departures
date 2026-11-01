@@ -28,7 +28,7 @@ final class WatchNext {
                 Faces.Resume r = new Faces.Resume();
                 r.title = nz(s(c, "title"), "Untitled");
                 String se = se(c);
-                String left = (dur > 0 && pos > 0) ? ((dur - pos) / 60000) + " min left" : (type == 1 ? "next episode" : "");
+                String left = (dur > 0 && pos > 0) ? minsLeft((dur - pos) / 60000) : (type == 1 ? "next episode" : "");
                 r.detail = ((se == null ? "" : se) + (left.isEmpty() ? "" : "   " + left)).trim();
                 r.app = label(pm, pkg);
                 best = r; bestWhen = when;
@@ -44,6 +44,8 @@ final class WatchNext {
     private static String s(Cursor c, String col) { int k = c.getColumnIndex(col); return k < 0 || c.isNull(k) ? null : c.getString(k); }
     private static long l(Cursor c, String col) { int k = c.getColumnIndex(col); return k < 0 || c.isNull(k) ? 0 : c.getLong(k); }
     private static int i(Cursor c, String col, int d) { int k = c.getColumnIndex(col); return k < 0 || c.isNull(k) ? d : c.getInt(k); }
+    static String minsLeft(long m) { return m + (m == 1 ? " min left" : " mins left"); }
+
     private static String nz(String v, String d) { return v == null || v.isEmpty() ? d : v; }
     private static String se(Cursor c) { String s = s(c, "season_display_number"), e = s(c, "episode_display_number"); if (e == null) return null; return (s != null ? "S" + s : "") + "E" + e; }
     private static String label(PackageManager pm, String pkg) { if (pkg == null) return ""; try { return String.valueOf(pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0))); } catch (Exception e) { return pkg; } }

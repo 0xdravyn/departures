@@ -122,6 +122,14 @@ public final class SettingsActivity extends Activity {
             String value() { return Math.round(prefs.getFloat("brightness", 1f) * 100) + "%"; }
             void step(int d) { float b = prefs.getFloat("brightness", 1f); int i = 0; for (int k = 0; k < BRIGHTNESS.length; k++) if (Math.abs(BRIGHTNESS[k] - b) < 0.01f) i = k; prefs.edit().putFloat("brightness", BRIGHTNESS[Math.floorMod(i + d, BRIGHTNESS.length)]).apply(); }
         });
+        rows.add(new Row("Random scatter effect  (a few blank bits flip now and then)") {
+            String value() { return prefs.getBoolean("scatter", true) ? "On" : "Off"; }
+            void step(int d) { prefs.edit().putBoolean("scatter", !prefs.getBoolean("scatter", true)).apply(); }
+        });
+        rows.add(new Row("Seconds on the clock") {
+            String value() { return prefs.getBoolean("clock_seconds", false) ? "On, ticking" : "Off"; }
+            void step(int d) { prefs.edit().putBoolean("clock_seconds", !prefs.getBoolean("clock_seconds", false)).apply(); }
+        });
         rows.add(new Row("Clock") {
             String value() { return prefs.getBoolean("clock24", cfg.clock24) ? "24-hour" : "12-hour"; }
             void step(int d) { prefs.edit().putBoolean("clock24", !prefs.getBoolean("clock24", cfg.clock24)).apply(); }

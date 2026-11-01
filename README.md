@@ -48,13 +48,13 @@ Quiet hours dim the board at night. The screenshots are the app's demo mode, whi
 Departures serves its own setup page on your Wi-Fi while it is on screen: open Departures on the TV, hold OK, and the first row shows the address (`http://<tv>:8787`) and a four-digit code. Open the address on a computer on the same network, enter the code, and everything is there in two tabs:
 
 - **Content**: your city (type it, pick it from the list), 12 or 24-hour clock, Celsius or Fahrenheit, up to three calendars (name and secret address, with a Test button), two lines of your own in place of the calendar rows, the custom message board with a live preview, and up to five markets, each looked up before it reaches the board.
-- **Settings**: which views and for how long, the flip animation, brightness, quiet hours, and screensaver mode with its idle delay.
+- **Settings**: which views and for how long, the flip animation, the random scatter effect (a few blank tiles flip on their own now and then), seconds on the clock, brightness, quiet hours, and screensaver mode with its idle delay.
 
 Each tab has its own reset. The TV checks the code on every request; the page remembers it on that computer for thirty days. Calendar addresses go in and are never shown or sent back out. A TV with nothing set up yet shows the address and code on the board itself.
 
 ## Settings on the TV
 
-Hold OK on the board (or press the remote's Menu button). The same settings as the page's Settings tab, with the remote: one row per view (how long it stays, or Off; the last view on cannot be switched off), the flip animation, brightness, clock, units, quiet hours, screensaver mode and the idle delay, plus the setup address and code (OK on that row makes a new code). The app and the screensaver share these settings.
+Hold OK on the board (or press the remote's Menu button). The same settings as the page's Settings tab, with the remote: one row per view (how long it stays, or Off; the last view on cannot be switched off), the flip animation, the scatter effect, seconds on the clock, brightness, clock, units, quiet hours, screensaver mode and the idle delay, plus the setup address and code (OK on that row makes a new code). The app and the screensaver share these settings.
 
 ## Setup
 
