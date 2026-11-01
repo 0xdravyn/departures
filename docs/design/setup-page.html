@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Departures setup</title>
+<style>
+  :root { --bg:#000; --panel:#111; --cell:#1c1c1c; --line:#262626; --ink:#efe9dc; --dim:#8f8a80; --faint:#5a564f;
+          --red:#e03a2f; --orange:#f08a1d; --yellow:#e9c53b; --green:#3ba55c; --blue:#3b7ddb; --violet:#8b5cf6; --white:#efe9dc; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif; }
+  main { max-width:560px; margin:0 auto; padding:0 16px 130px; }
+  header { padding:28px 0 0; }
+  .logo { display:block; margin-bottom:14px; }
+  .mark { font-weight:800; letter-spacing:.32em; font-size:13px; color:var(--dim); }
+  .bar { display:flex; align-items:center; gap:8px; margin:10px 0 0; padding:9px 12px; background:var(--panel); border:1px solid var(--line); border-radius:8px; font-size:14px; }
+  .bar .addr { margin-left:auto; color:var(--dim); font-variant-numeric:tabular-nums; }
+  .dot { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 0 3px rgba(59,165,92,.2); flex:none; }
+  .dot.off { background:var(--faint); box-shadow:none; }
+  h1 { margin:6px 0 2px; font-size:26px; font-weight:700; letter-spacing:-.01em; }
+  .sub { color:var(--dim); margin:0; }
+  .code { margin-top:14px; }
+  .code input[type=text] { width:150px; letter-spacing:.3em; font-size:20px; text-align:center; display:block; margin-bottom:8px; }
+  .code .help { margin:0; }
+  .code input.bad { border-color:var(--red); animation:shake .3s; } .code input.good { border-color:var(--green); }
+  @keyframes shake { 25% { transform:translateX(-4px) } 75% { transform:translateX(4px) } }
+  body.locked footer .btn { opacity:.4; pointer-events:none; }
+  .tabs { display:flex; gap:4px; margin:22px 0 0; background:var(--cell); border-radius:12px; padding:4px; }
+  .tabs button { flex:1; background:none; border:0; border-radius:9px; color:var(--dim); font:inherit; font-size:17px; font-weight:700; padding:13px 0; }
+  .tabs button.on { background:var(--ink); color:#000; }
+  .tab { display:none; } .tab.on { display:block; }
+  .tabnote { color:var(--dim); font-size:14px; margin:14px 0 0; }
+  section { margin-top:26px; border-top:1px solid var(--line); padding-top:18px; }
+  section:first-of-type { border-top:0; margin-top:8px; }
+  h2 { margin:0 0 12px; font-size:12px; letter-spacing:.28em; color:var(--dim); font-weight:700; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; }
+  .row + .row { border-top:1px solid var(--line); }
+  .row label.name { flex:1; font-weight:600; }
+  .help { color:var(--dim); font-size:14px; margin:4px 0 10px; }
+  .steps { color:var(--dim); font-size:14px; margin:0 0 10px; padding-left:22px; }
+  .steps li { margin:4px 0; }
+  .steps b { color:var(--ink); font-weight:600; }
+  .status { font-size:14px; color:var(--dim); }
+  .ok { color:var(--green); } .warn { color:var(--orange); }
+  input[type=text], input[type=number], input[type=password], input[type=time] {
+    width:100%; background:var(--cell); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:11px 12px; font:inherit; }
+  input[type=number], input[type=time] { width:auto; }
+  input::placeholder { color:var(--faint); }
+  .field { margin:8px 0; }
+  .menu { position:absolute; left:0; right:0; top:calc(100% + 4px); background:#161616; border:1px solid var(--line); border-radius:8px; overflow:hidden; z-index:2; }
+  .menu div { padding:10px 12px; font-size:15px; display:flex; justify-content:space-between; gap:10px; }
+  .menu div + div { border-top:1px solid var(--line); }
+  .menu div.on { background:var(--cell); }
+  .menu span { color:var(--dim); font-size:13px; white-space:nowrap; }
+  .seg { display:inline-flex; background:var(--cell); border-radius:8px; padding:3px; }
+  .seg span { padding:7px 12px; border-radius:6px; color:var(--dim); font-size:14px; font-weight:600; }
+  .seg span.on { background:var(--ink); color:#000; }
+  .toggle { width:48px; height:28px; border-radius:14px; background:var(--cell); position:relative; flex:none; }
+  .toggle::after { content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:var(--faint); }
+  .toggle.on { background:var(--green); } .toggle.on::after { left:23px; background:#fff; }
+  select { background:var(--cell); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font:inherit; font-size:14px; }
+  .cal { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; margin:10px 0; }
+  .cal .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; }
+  .cal .top b { font-size:15px; }
+  .btn { display:inline-block; background:var(--cell); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:9px 14px; font:inherit; font-size:14px; font-weight:600; }
+  .btn.primary { background:var(--ink); color:#000; border-color:var(--ink); }
+  .btn.ghost { color:var(--dim); border-style:dashed; width:100%; text-align:center; }
+  .btn.danger { color:var(--red); border-color:#3a1f1d; white-space:nowrap; flex:none; }
+  .reset { margin-top:28px; padding-top:18px; border-top:1px solid var(--line); display:flex; justify-content:center; }
+  .chips { display:flex; gap:8px; margin:10px 0; }
+  .chips i { width:28px; height:28px; border-radius:6px; display:block; }
+  .board { display:grid; grid-template-columns:repeat(22, 1fr); gap:2px; background:#000; padding:8px; border-radius:8px; border:1px solid var(--line); margin:12px 0 4px; }
+  .board i { aspect-ratio:1/1.36; background:var(--cell); border-radius:2px; display:flex; align-items:center; justify-content:center;
+             font:700 11px/1 "Helvetica Neue", Arial, sans-serif; color:var(--ink); }
+  .board i.r{background:var(--red)} .board i.o{background:var(--orange)} .board i.y{background:var(--yellow)} .board i.g{background:var(--green)} .board i.b{background:var(--blue)} .board i.v{background:var(--violet)} .board i.w{background:var(--white)}
+  .count { color:var(--faint); font-size:12px; text-align:right; }
+  pre { background:var(--cell); border-radius:8px; padding:10px 12px; font-size:13px; overflow-x:auto; color:var(--ink); margin:8px 0; }
+  .market { padding:8px 0; border-top:1px solid var(--line); }
+  .market:first-of-type { border-top:0; }
+  .market .resolved { font-size:13px; color:var(--dim); padding:4px 2px 0; }
+  footer { position:fixed; left:0; right:0; bottom:0; background:linear-gradient(transparent, #000 30%); padding:28px 16px 20px; }
+  footer .inner { max-width:560px; margin:0 auto; }
+  footer .btn { width:100%; text-align:center; padding:14px; font-size:16px; }
+  footer p { margin:8px 0 0; text-align:center; font-size:12px; color:var(--faint); }
+</style>
+</head>
+<body class="locked">
+<main>
+  <header>
+    <svg class="logo" viewBox="0 0 100 100" width="44" height="44" aria-hidden="true"><path fill="#efe9dc" fill-rule="evenodd" d="M28 14 h44 a10 10 0 0 1 10 10 v24.5 h-64 v-24.5 a10 10 0 0 1 10 -10 z M18 51.5 h64 v24.5 a10 10 0 0 1 -10 10 h-44 a10 10 0 0 1 -10 -10 z"/></svg>
+    <div class="mark">DEPARTURES</div>
+    <h1>Set up your board</h1>
+    <div class="bar" id="bar"><i class="dot off"></i><span id="barname">Not connected</span><span class="addr">192.0.2.10</span></div>
+    <div class="code"><input type="text" id="code" inputmode="numeric" maxlength="4" placeholder="····" autocomplete="off"><span class="help" id="codehelp">The code on the TV: hold OK › Set up from your phone.</span></div>
+    <nav class="tabs">
+      <button class="on" data-tab="content">Content</button>
+      <button data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <!-- ============ CONTENT: what the board shows ============ -->
+  <div class="tab on" id="content">
+    <p class="tabnote">What the board shows: your place, your calendars, your message, your markets.</p>
+
+    <section>
+      <h2>LOCATION AND TIME</h2>
+      <p class="help">Type your city and pick it from the list. The weather follows it; the clock keeps the TV's own time.</p>
+      <div class="field" style="position:relative">
+        <input type="text" id="city" placeholder="City" autocomplete="off">
+        <div class="menu" id="citymenu" hidden></div>
+      </div>
+      <div class="status" id="citypick">No location yet</div>
+      <div class="row"><label class="name">Clock</label><div class="seg"><span class="on">12 h</span><span>24 h</span></div></div>
+      <div class="row"><label class="name">Temperature</label><div class="seg"><span class="on">°C</span><span>°F</span></div></div>
+    </section>
+
+    <section>
+      <h2>CALENDARS</h2>
+      <p class="help">The Today view shows your next event under the date, time and weather. To connect a calendar:</p>
+      <ol class="steps">
+        <li>Open Google Calendar on the web, then Settings, and pick the calendar on the left.</li>
+        <li>Scroll to "Integrate calendar" and copy the <b>Secret address in iCal format</b>.</li>
+        <li>Paste it below, hit Test, then Apply to TV.</li>
+      </ol>
+      <p class="help">The address is stored on the TV only, never shown again and never shared anywhere else.</p>
+      <div class="row"><label class="name">Today shows</label><div class="seg" id="todayseg"><span class="on">Calendar events</span><span>A message</span></div></div>
+      <div id="calblock">
+      <div class="cal">
+        <div class="field" style="margin-top:0"><input type="text" placeholder="Calendar name"></div>
+        <div class="field"><input type="password" placeholder="Secret address in iCal format"></div>
+        <div class="row" style="padding:4px 0 0; border:0"><span class="status">Not connected</span><span class="btn">Test</span></div>
+      </div>
+      <span class="btn ghost">+ Add another calendar (up to three)</span>
+      </div>
+      <div id="msgblock" hidden>
+        <p class="help">Two lines of 21 characters, in place of the event rows.</p>
+        <div class="field"><input type="text" maxlength="21" placeholder="Line 1"></div>
+        <div class="field"><input type="text" maxlength="21" placeholder="Line 2"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>MESSAGE</h2>
+      <div class="board" id="board"></div>
+      <div class="count">22 × 6 · a chip takes one cell</div>
+      <div class="chips"><i style="background:var(--red)"></i><i style="background:var(--orange)"></i><i style="background:var(--yellow)"></i><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--violet)"></i><i style="background:var(--white)"></i></div>
+      <div class="field"><input class="msg" type="text" value="{g} BACK AT 6" maxlength="22"></div>
+      <div class="field"><input class="msg" type="text" value="" maxlength="22"></div>
+      <div class="field"><input class="msg" type="text" value="DINNER IS IN THE OVEN" maxlength="22"></div>
+      <div class="field"><input class="msg" type="text" value="{o} 180 FOR 40 MIN" maxlength="22"></div>
+      <div class="field"><input class="msg" type="text" value="" maxlength="22"></div>
+      <div class="field"><input class="msg" type="text" value="{r}{r}{r} LOVE YOU {r}{r}{r}" maxlength="22"></div>
+    </section>
+
+    <section>
+      <h2>MARKETS</h2>
+      <p class="help">Up to five, shown on the board by their symbol.</p>
+      <ul class="steps">
+        <li>Stocks, indices, futures: the symbol on <b>finance.yahoo.com</b> (NVDA, ^GSPC, GC=F).</li>
+        <li>Crypto: the coin id in the <b>coingecko.com</b> address (bitcoin, ethereum).</li>
+      </ul>
+      <div class="market"><input type="text" value="^GSPC" placeholder="Symbol or coin id"><div class="resolved ok">S&amp;P 500 · Yahoo Finance · 7,580 · -1.8%</div></div>
+      <div class="market"><input type="text" value="NVDA"><div class="resolved ok">NVIDIA Corporation · Yahoo Finance · 204.6</div></div>
+      <div class="market"><input type="text" value="GOOGL"><div class="resolved ok">Alphabet Inc. · Yahoo Finance · 279.8</div></div>
+      <div class="market"><input type="text" value="bitcoin"><div class="resolved ok">Bitcoin · CoinGecko · 77,469</div></div>
+      <div class="market"><input type="text" value="GC=F"><div class="resolved ok">Gold Dec 26 · Yahoo Finance · 3,899</div></div>
+    </section>
+
+    <div class="reset"><span class="btn danger">Reset settings on this page</span></div>
+  </div>
+
+  <!-- ============ SETTINGS: what the TV's own settings page also offers ============ -->
+  <div class="tab" id="settings">
+    <p class="tabnote">The same settings as on the TV (hold OK on the remote), in one place.</p>
+
+    <section>
+      <h2>VIEWS</h2>
+      <p class="help">Which views the board cycles through, and for how long each stays.</p>
+      <div class="row"><label class="name">Today</label><select><option>60 s</option></select><div class="toggle on"></div></div>
+      <div class="row"><label class="name">Keep watching?</label><select><option>30 s</option></select><div class="toggle on"></div></div>
+      <div class="row"><label class="name">Markets</label><select><option>60 s</option></select><div class="toggle on"></div></div>
+      <div class="row"><label class="name">Message</label><select><option>30 s</option></select><div class="toggle"></div></div>
+      <p class="help" style="margin-top:10px">Keep watching? reads the TV's own Continue watching row and sends it nowhere. <span class="ok">Permission granted.</span></p>
+    </section>
+
+    <section>
+      <h2>BOARD</h2>
+      <div class="row"><label class="name">Flip animation</label><div class="seg"><span>Off</span><span class="on">Normal</span><span>Fast</span></div></div>
+      <div class="row"><label class="name">Brightness</label><div class="seg"><span class="on">Full</span><span>Dim</span></div></div>
+    </section>
+
+    <section>
+      <h2>QUIET HOURS</h2>
+      <div class="row"><label class="name">Quiet hours</label><div class="toggle on"></div></div>
+      <div class="row"><label class="name">From</label><input type="time" value="23:00"></div>
+      <div class="row"><label class="name">Until</label><input type="time" value="07:00"></div>
+    </section>
+
+    <section>
+      <h2>SCREENSAVER MODE</h2>
+      <p class="help">Departures runs as an app from your home screen any time. Screensaver mode also starts it by itself when the TV sits idle.</p>
+      <div class="status">TV screensaver now: <b>Google's Ambient</b></div>
+      <div class="row" style="border:0; padding-top:12px"><span class="btn primary">Enable screensaver mode</span></div>
+      <div class="row"><label class="name">Start after the TV idles for</label><span><input type="number" value="2" style="width:64px; text-align:center"> min</span></div>
+      <p class="help" style="margin-top:10px">Overrides the TV's own screensaver settings; the TV's sleep timer still applies. Once enabled, the button reads "Disable screensaver mode".</p>
+    </section>
+
+    <div class="reset"><span class="btn danger">Reset settings on this page</span></div>
+  </div>
+</main>
+
+<footer><div class="inner">
+  <span class="btn primary" id="apply">Apply to TV</span>
+  <p id="footnote">Everything you enter is stored on the TV only. No account, no server of ours: the TV talks only to the sources you pick. This page stays open for ten minutes.</p>
+</div></footer>
+
+<script>
+  // Tabs
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === b.dataset.tab));
+    window.scrollTo(0, 0);
+  }));
+  // Access code. In the real page the TV checks it; the browser only shows the answer. Here 4821 stands in for the TV.
+  const code = document.getElementById('code'), codehelp = document.getElementById('codehelp'), dot = document.querySelector('#bar .dot'), barname = document.getElementById('barname');
+  code.addEventListener('input', () => {
+    code.classList.remove('bad', 'good');
+    if (code.value.length < 4) { document.body.classList.add('locked'); codehelp.textContent = 'The code on the TV: hold OK › Set up from your phone.'; codehelp.className = 'help'; dot.className = 'dot off'; barname.textContent = 'Not connected'; return; }
+    if (code.value === '4821') { code.classList.add('good'); document.body.classList.remove('locked'); codehelp.textContent = 'TV connected'; codehelp.className = 'help ok'; dot.className = 'dot'; barname.textContent = 'Living room TV'; }
+    else { code.classList.add('bad'); document.body.classList.add('locked'); codehelp.textContent = 'TV not found'; codehelp.className = 'help warn'; dot.className = 'dot off'; barname.textContent = 'Not connected'; code.select(); }
+  });
+  // Segmented controls and toggles switch in the mockup
+  document.querySelectorAll('.seg span').forEach(sp => sp.addEventListener('click', () => {
+    sp.parentElement.querySelectorAll('span').forEach(x => x.classList.toggle('on', x === sp));
+    if (sp.parentElement.id === 'todayseg') { const msg = sp.textContent.startsWith('A message'); document.getElementById('calblock').hidden = msg; document.getElementById('msgblock').hidden = !msg; }
+  }));
+  document.querySelectorAll('.toggle').forEach(t => t.addEventListener('click', () => t.classList.toggle('on')));
+  // City picker: a list only while typing, gone once a city is chosen (the real page asks Open-Meteo's geocoder)
+  const CITIES = [['Vancouver, British Columbia, Canada','Pacific Time'],['Vancouver, Washington, United States','Pacific Time'],['Vannes, Brittany, France','Central European Time'],['Vantaa, Uusimaa, Finland','Eastern European Time'],['Toronto, Ontario, Canada','Eastern Time'],['Tokyo, Japan','Japan Standard Time'],['London, England, United Kingdom','Greenwich Mean Time'],['Los Angeles, California, United States','Pacific Time'],['Montreal, Quebec, Canada','Eastern Time'],['Melbourne, Victoria, Australia','Australian Eastern Time']];
+  const city = document.getElementById('city'), menu = document.getElementById('citymenu'), pick = document.getElementById('citypick');
+  city.addEventListener('input', () => {
+    const q = city.value.trim().toLowerCase(); menu.innerHTML = '';
+    const hits = q.length < 2 ? [] : CITIES.filter(c => c[0].toLowerCase().startsWith(q)).slice(0, 5);
+    menu.hidden = hits.length === 0;
+    for (const [name, tz] of hits) { const d = document.createElement('div'); d.innerHTML = name + ' <span>' + tz + '</span>';
+      d.addEventListener('click', () => { city.value = name.split(',')[0]; pick.textContent = name + ' · ' + tz; pick.className = 'status ok'; menu.hidden = true; }); menu.appendChild(d); }
+  });
+  // Board preview from the Message fields: {r}{o}{y}{g}{b}{v}{w} are chips; common emoji map to the nearest chip.
+  const EMOJI = {'❤️':'r','🧡':'o','💛':'y','💚':'g','💙':'b','💜':'v','🤍':'w','🟥':'r','🟧':'o','🟨':'y','🟩':'g','🟦':'b','🟪':'v','⬜':'w','🔴':'r','🟠':'o','🟡':'y','🟢':'g','🔵':'b','🟣':'v','⚪':'w','⭐':'y','🌟':'y','☀️':'y'};
+  const lines = [...document.querySelectorAll('input.msg')];
+  const board = document.getElementById('board');
+  function draw() {
+    board.innerHTML = '';
+    for (const inp of lines) {
+      const cells = []; const s = inp.value.toUpperCase();
+      for (let i = 0; i < s.length && cells.length < 22; i++) {
+        const m = s.slice(i).match(/^\{([ROYGBVW])\}/);
+        if (m) { cells.push({chip: m[1].toLowerCase()}); i += 2; continue; }
+        let hit = null; for (const k of Object.keys(EMOJI)) if (s.startsWith(k, i)) { hit = k; break; }
+        if (hit) { cells.push({chip: EMOJI[hit]}); i += hit.length - 1; continue; }
+        if (s[i] === '{' || s[i] === '}' || s.codePointAt(i) > 0x24F) { if (s.codePointAt(i) > 0xFFFF) i++; continue; }
+        cells.push({ch: s[i]});
+      }
+      while (cells.length < 22) cells.push({ch: ' '});
+      for (const c of cells) { const el = document.createElement('i'); if (c.chip) el.className = c.chip; else el.textContent = c.ch; board.appendChild(el); }
+    }
+  }
+  lines.forEach(l => l.addEventListener('input', draw)); draw();
+</script>
+</body>
+</html>
