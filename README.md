@@ -69,7 +69,7 @@ Without step 2, Keep watching? stays off and the screensaver switch is two ADB l
 
 **Kiosk use.** For a board that comes back by itself after a power cut, let the home screen start it: the [CleanYourTV](https://github.com/Gathin23/cleanyourtv) launcher can open an app at every power-on (`open_on_start`); Android itself does not let an app start a screen from the background on TVs. On the TV, switch off every view but the one you want, turn quiet hours off if you are open late, and switch off the TV's idle standby.
 
-## The settings page
+## Settings
 
 The TV serves it on your Wi-Fi while the board is on screen. Hold OK on the board (or press the remote's Menu button) and the first row shows the address (`http://<tv>:8787`) and a four-digit code; a TV with nothing set up yet shows them on the board itself. Open the address on a computer, enter the code, and everything is there in two tabs:
 
