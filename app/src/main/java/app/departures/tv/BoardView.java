@@ -64,19 +64,22 @@ public final class BoardView extends View {
 
     private void stopScatter() { removeCallbacks(scatterTick); java.util.Arrays.fill(twitchSteps, 0); }
 
+    /** Per character, at the current size: how much to narrow it to fit the bit, and where its middle sits. */
+    private float glyphSize = -1;
+    private final float[] glyphScale = new float[256], glyphMid = new float[256];
+
     /** One round: one to four blank bits, each starting within the next 0.6 s, each three to six flaps. */
     private void scatterOnce() {
         if (!animating) {
-            long now = SystemClock.uptimeMillis();
             int want = 1 + random.nextInt(4);
             for (int tries = 0; tries < 40 && want > 0; tries++) {
-                int i = random.nextInt(Board.ROWS * Board.COLS);
-                if (shown.cells[i] != ' ' || target.cells[i] != ' ' || twitchSteps[i] > 0) continue;
-                twitchStart[i] = now + random.nextInt(600);
-                twitchSteps[i] = 3 + random.nextInt(4);
+                final int i = random.nextInt(Board.ROWS * Board.COLS);
+                if (shown.cells[i] != ' ' || target.cells[i] != ' ' || twitchSteps[i] != 0) continue;
+                twitchSteps[i] = -1;   // claimed; starts when its delay is up
+                final int steps = 3 + random.nextInt(4);
+                postDelayed(() -> { if (twitchSteps[i] == -1 && shown.cells[i] == ' ' && target.cells[i] == ' ') { twitchStart[i] = SystemClock.uptimeMillis(); twitchSteps[i] = steps; animating = true; postInvalidateOnAnimation(); } else twitchSteps[i] = 0; }, random.nextInt(600));
                 want--;
             }
-            animating = true; postInvalidateOnAnimation();
         }
         scheduleScatter();   // a board mid-flip skips this round
     }
@@ -105,6 +108,8 @@ public final class BoardView extends View {
         Board from = target.copy();   // flips that are still running start from where they were heading
         target = b.copy();
         boolean any = false;
+        int first = Board.COLS;   // the wave starts at the first column that changes: a lone bit on the right flips at once
+        for (int i = 0; i < Board.ROWS * Board.COLS; i++) if (from.cells[i] != target.cells[i]) first = Math.min(first, i % Board.COLS);
         for (int i = 0; i < Board.ROWS * Board.COLS; i++) {
             char a = from.cells[i], z = target.cells[i];
             if (a == z) continue;
@@ -112,7 +117,7 @@ public final class BoardView extends View {
             int steps = Math.floorMod(Board.flapIndex(z) - Board.flapIndex(a), Board.flapCount());
             flipFrom[i] = Board.flapIndex(a);
             flipSteps[i] = Math.min(steps, MAX_STEPS);
-            flipStart[i] = now + (i % Board.COLS) * COLUMN_DELAY_MS;
+            flipStart[i] = now + (i % Board.COLS - first) * COLUMN_DELAY_MS;
             any = true;
         }
         if (any) { animating = true; postInvalidateOnAnimation(); } else { shown = target.copy(); invalidate(); }
@@ -133,7 +138,7 @@ public final class BoardView extends View {
         float bitH = (h - 2 * my - (Board.ROWS - 1) * gap) / Board.ROWS;
         float x0 = (w - bitW * Board.COLS) / 2f, y0 = (h - (Board.ROWS * bitH + (Board.ROWS - 1) * gap)) / 2f;
         float radius = bitW * 0.085f;
-        glyph.setTextSize(bitH * 0.80f);
+        if (glyphSize != bitH) { glyphSize = bitH; glyph.setTextSize(bitH * 0.80f); java.util.Arrays.fill(glyphScale, 0f); }
         long now = SystemClock.uptimeMillis();
         boolean still = true;
         int tileColour = blend(0xFF171719, dim), glyphColour = blend(0xFFEEEAE2, dim);
@@ -174,14 +179,20 @@ public final class BoardView extends View {
                     if (ch != ' ') {
                         glyph.setColor(glyphColour);
                         String s = String.valueOf(ch);
-                        // Keep the glyph inside the tile: narrow it when the face draws it wider than the bit.
-                        glyph.setTextScaleX(1f);
-                        float wide = glyph.measureText(s), room = rect.width() * 0.84f;
-                        if (wide > room) glyph.setTextScaleX(room / wide);
-                        glyph.getTextBounds(s, 0, 1, bounds);
+                        int k = ch < 256 ? ch : 0;
+                        if (glyphScale[k] == 0f) {
+                            // Keep the glyph inside the tile: narrow it when the face draws it wider than the bit.
+                            glyph.setTextScaleX(1f);
+                            float wide = glyph.measureText(s), room = rect.width() * 0.84f;
+                            glyphScale[k] = wide > room ? room / wide : 1f;
+                            glyph.setTextScaleX(glyphScale[k]);
+                            glyph.getTextBounds(s, 0, 1, bounds);
+                            glyphMid[k] = (bounds.top + bounds.bottom) / 2f;
+                        }
+                        glyph.setTextScaleX(glyphScale[k]);
                         // Centre each glyph in the bit, except the marks that live on the baseline: a centred
                         // full stop or comma reads as a middle dot ("7,580" became "7 · 580").
-                        float baseline = (ch == '.' || ch == ',') ? y + bitH * 0.78f : y + bitH / 2f - (bounds.top + bounds.bottom) / 2f;
+                        float baseline = (ch == '.' || ch == ',') ? y + bitH * 0.78f : y + bitH / 2f - glyphMid[k];
                         c.drawText(s, rect.centerX(), baseline, glyph);
                     }
                 }
