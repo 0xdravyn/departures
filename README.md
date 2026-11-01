@@ -4,7 +4,7 @@
 
 <p align="center"><b>The split-flap board you always wanted, on the TV you already own.</b></p>
 
-<p align="center">Departures turns an Android TV or Google TV into a personal Vestaboard-style board: the date and time, today's weather, what's next on your calendar, the show you left half-watched, the markets, and a message of your own, each flipping into place as it changes. Run it as the screensaver, or as an app that stays on all day.<br>Ten minutes to set up, from a page the TV serves on your Wi-Fi. No account, no server, no analytics: everything stays on the TV.</p>
+<p align="center">Departures turns an Android TV or Google TV into a personal Vestaboard-style board: the date and time, today's weather, what's next on your calendar, the show you left half-watched, the markets, and a message of your own, each flipping into place as it changes. Run it as the screensaver, or as an app that stays on all day.<br>Ten minutes to set up, from a page the TV serves on your Wi-Fi. No accounts: everything is hosted locally on your TV.</p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-cfffcf?style=for-the-badge&labelColor=15181e" alt="MIT licence"></a>

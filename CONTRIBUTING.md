@@ -29,3 +29,5 @@ Views are the contribution this project most wants. One view is one small static
 4. a README line and, if it needs a permission or a network source, a `SECURITY.md` line.
 
 Keep to the grid: text that does not fit is shortened, never shrunk, and nothing moves except flaps.
+
+Departures was built with Claude Code as the pair; pull requests made the same way are welcome, as long as a person has run the result on a real TV.
