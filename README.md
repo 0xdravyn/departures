@@ -54,6 +54,7 @@ What you need: a computer on the same Wi-Fi as the TV, `adb` (Android platform t
    adb connect <tv-ip>:5555
    adb install -r app-release.apk
    ```
+   If the home screen does not show Departures afterwards (TVs with a second profile keep per-user install state), run `adb shell pm install-existing --user 0 app.departures.tv`.
 2. **Write your configuration.** Copy [`config.example.json`](config.example.json) to `config.json` (it is git-ignored) and fill in:
    - `location`: your latitude and longitude, for the weather.
    - `calendars`: one entry per calendar, with its **secret iCal address**. In Google Calendar on the web: Settings > the calendar > Integrate calendar > "Secret address in iCal format" (it contains `/private-`; the public address returns 404 for a private calendar). Anyone holding that link can read the calendar, so treat it like a password.
@@ -84,7 +85,7 @@ Departures runs entirely on the TV. It reads your calendars from the secret addr
 
 ```bash
 adb shell settings put secure screensaver_components com.google.android.apps.tv.dreamx/.service.Backdrop   # Google TV's own screensaver
-adb shell pm uninstall --user 0 app.departures.tv
+adb uninstall app.departures.tv
 ```
 
 Uninstalling removes the configuration with it. Nothing else on the TV was changed.

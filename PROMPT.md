@@ -20,7 +20,7 @@ Connect
 
 Build or take the APK
 - If a release APK is in the repository's Releases page, prefer it; otherwise build with JDK 17 and the Android SDK: `./gradlew assembleRelease` (it signs with the debug key, which is fine for one TV). Tell me what you had to install on this computer.
-- `adb install -r app/build/outputs/apk/release/app-release.apk`.
+- `adb install -r app/build/outputs/apk/release/app-release.apk`, then confirm `adb shell dumpsys package app.departures.tv` shows `User 0: ... installed=true`; if not, `adb shell pm install-existing --user 0 app.departures.tv` (a TV with a second profile keeps per-user install state, and the app, its screensaver and its import stay invisible otherwise).
 
 Configure
 - Copy `config.example.json` to `config.json` (it is git-ignored). Fill in my coordinates, units, 12h or 24h clock and quiet hours after asking me; leave the calendar lines for me to paste in, then wait until I say the file is saved.
@@ -40,4 +40,4 @@ Make it the screensaver
 - Tell me to switch USB debugging back off on the TV when we are done.
 
 Undo, if I ask
-- `adb shell settings put secure screensaver_components <the previous value you noted>`, then `adb shell pm uninstall --user 0 app.departures.tv`.
+- `adb shell settings put secure screensaver_components <the previous value you noted>`, then `adb uninstall app.departures.tv`.
