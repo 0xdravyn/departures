@@ -31,7 +31,7 @@ public final class DeparturesDream extends DreamService implements Data.Listener
         view.setFlips(cfg.flips);
         setContentView(view);
         data = new Data(this, cfg, this);
-        view.setBoard(Faces.today(System.currentTimeMillis(), cfg, null, null, SetupServer.addressLine(), data.pairCode));
+        view.setBoard(Faces.today(System.currentTimeMillis(), cfg, null, java.util.Collections.emptyList(), SetupServer.addressLine(), data.pairCode));
         applyQuiet();
         if (!cfg.todayOn) cycle.next(data, cfg);   // Today switched off in settings: start on a view that is on
         data.start();
@@ -60,5 +60,6 @@ public final class DeparturesDream extends DreamService implements Data.Listener
         view.setDim(cfg.quiet(c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE)) ? Math.min(cfg.quietDim, cfg.brightness) : cfg.brightness);
     }
 
-    static long msToNextMinute() { long now = System.currentTimeMillis(); return 60_000L - (now % 60_000L) + 50; }
+    /** To the next half-minute: the clock flips on the minute, simultaneous events take turns on the half. */
+    static long msToNextMinute() { long now = System.currentTimeMillis(); return Faces.ALTERNATE_MS - (now % Faces.ALTERNATE_MS) + 50; }
 }

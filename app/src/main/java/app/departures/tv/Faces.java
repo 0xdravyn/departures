@@ -10,6 +10,8 @@ import java.util.Locale;
  * network code exists, and tested without a TV.
  */
 public final class Faces {
+    /** Simultaneous events take turns this often; the board redraws on the same beat. */
+    public static final long ALTERNATE_MS = 30_000L;
     public static final class Weather { public int now, high, low; public String condition = ""; public boolean rain; }
     public static final class Event { public String title = ""; public String label = ""; public long startMs, endMs; public boolean allDay; }
     public static final class Resume { public String title = "", detail = "", app = ""; }
@@ -17,14 +19,17 @@ public final class Faces {
     /** The Now face of the first builds, kept for the demo and tests: date, time, weather and the next event. */
     public static Board now(long nowMs, boolean clock24, Weather w, Event e) {
         Config c = new Config(); c.present = true; c.clock24 = clock24; c.latitude = 0; c.longitude = 0; c.calendars.add(new Config.Calendar("", "https://example.invalid"));
-        return today(nowMs, c, w, e, null, null);
+        return today(nowMs, c, w, e == null ? java.util.Collections.emptyList() : List.of(e), null, null);
     }
 
     /**
      * Today: row 1 the date and time; rows 2 and 3 the weather; rows 5 and 6 the next event with its countdown,
-     * or two lines of the owner's own. A TV with no configuration yet shows where to set it up instead.
+     * or two lines of the owner's own. Events that share the same moment take turns every 30 seconds, with +N at
+     * the end of the title row for the ones waiting. A TV with no configuration yet shows where to set it up instead.
      */
-    public static Board today(long nowMs, Config cfg, Weather w, Event e, String setupAddress, String pairCode) {
+    public static Board today(long nowMs, Config cfg, Weather w, List<Event> events, String setupAddress, String pairCode) {
+        int n = events == null ? 0 : events.size();
+        Event e = n == 0 ? null : events.get((int) ((nowMs / ALTERNATE_MS) % n));
         Board b = new Board();
         Date d = new Date(nowMs);
         String date = new SimpleDateFormat("EEE d MMM", Locale.US).format(d).toUpperCase(Locale.US);
@@ -53,7 +58,9 @@ public final class Faces {
             writeRich(b, 4, 1, cfg.todayLine1);
             writeRich(b, 5, 1, cfg.todayLine2);
         } else if (e != null) {
-            b.text(4, 1, fit(e.title, Board.COLS - 1));
+            String more = n > 1 ? "+" + (n - 1) : "";
+            b.text(4, 1, fit(e.title, Board.COLS - 1 - (more.isEmpty() ? 0 : more.length() + 1)));
+            if (!more.isEmpty()) b.textRight(4, more);
             // Row 6: the time and countdown on the left, the calendar label on the right, never overlapping:
             // the label keeps its place and the countdown gives way (minutes first, then the whole countdown).
             String label = e.label == null ? "" : e.label.toUpperCase(Locale.US);

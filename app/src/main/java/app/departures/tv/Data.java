@@ -71,7 +71,23 @@ final class Data {
      * event within cfg.lookaheadDays (tomorrow by default), so the evening board points at the morning. Null
      * when nothing qualifies, and the face says so.
      */
-    Faces.Event nextEvent(long now) {
+    Faces.Event nextEvent(long now) { List<Faces.Event> l = nextEvents(now); return l.isEmpty() ? null : l.get(0); }
+
+    /**
+     * The event the board shows and everything scheduled at the same moment: all events running now that started
+     * together, else all that start at the same next time. The face alternates between them every 30 seconds and
+     * marks the others with +N, so a glance never hides a clash.
+     */
+    List<Faces.Event> nextEvents(long now) {
+        Faces.Event first = pick(now);
+        List<Faces.Event> out = new java.util.ArrayList<>();
+        if (first == null) return out;
+        for (Faces.Event e : events) if (e.startMs == first.startMs && e.endMs > now && e.allDay == first.allDay) out.add(e);
+        if (out.isEmpty()) out.add(first);
+        return out;
+    }
+
+    private Faces.Event pick(long now) {
         java.util.Calendar c = java.util.Calendar.getInstance(); c.setTimeInMillis(now);
         c.set(java.util.Calendar.HOUR_OF_DAY, 0); c.set(java.util.Calendar.MINUTE, 0); c.set(java.util.Calendar.SECOND, 0); c.set(java.util.Calendar.MILLISECOND, 0);
         c.add(java.util.Calendar.DAY_OF_MONTH, 1 + cfg.lookaheadDays);
