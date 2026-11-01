@@ -234,6 +234,7 @@
   async function api(path, body) {
     const r = await fetch('/api/' + path, { method: body === undefined ? 'GET' : 'POST', headers: { 'X-Code': code || '', 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
     if (r.status === 403) { lock('TV not found'); throw new Error('code'); }
+    if (r.status === 429) { lock('Too many wrong codes. Wait a moment and try again.'); throw new Error('wait'); }
     return r.json();
   }
   function lock(msg) { document.body.classList.add('locked'); codeIn.classList.remove('good'); if (msg) { codeIn.classList.add('bad'); codeHelp.textContent = msg; codeHelp.className = 'help warn'; codeIn.select(); } dot.className = 'dot off'; barname.textContent = 'Not connected'; }

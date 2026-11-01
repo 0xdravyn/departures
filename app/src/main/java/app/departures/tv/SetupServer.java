@@ -39,6 +39,9 @@ final class SetupServer {
     private final Handler ui = new Handler(Looper.getMainLooper());
     private ServerSocket socket;
     private int refs;
+    /** Wrong codes: after five, every API request waits out a pause that doubles each time, up to ten minutes. */
+    private int wrongCodes;
+    private long pausedUntil;
 
     private SetupServer(Context ctx) { app = ctx.getApplicationContext(); }
 
@@ -106,12 +109,21 @@ final class SetupServer {
             if (method.equals("GET") && (path.equals("/") || path.equals("/index.html"))) { sendAsset(out, "setup.html", "text/html; charset=utf-8"); return; }
             if (method.equals("GET") && path.equals("/logo.svg")) { sendAsset(out, "logo.svg", "image/svg+xml"); return; }
             if (!path.startsWith("/api/")) { send(out, 404, "text/plain", "not found"); return; }
-            if (!codeOk(code)) { send(out, 403, "application/json", "{\"error\":\"code\"}"); return; }
+            if (paused()) { send(out, 429, "application/json", "{\"error\":\"wait\"}"); return; }
+            if (!codeOk(code)) { wrongCode(); send(out, 403, "application/json", "{\"error\":\"code\"}"); return; }
+            synchronized (this) { wrongCodes = 0; }
             JSONObject res = api(method, path.substring(5), query, body);
             send(out, res.optInt("_status", 200), "application/json", res.toString());
         } catch (Exception e) {
             android.util.Log.w("Departures", "setup request failed: " + e.getClass().getSimpleName());
         }
+    }
+
+    private synchronized boolean paused() { return System.currentTimeMillis() < pausedUntil; }
+
+    private synchronized void wrongCode() {
+        wrongCodes++;
+        if (wrongCodes >= 5) pausedUntil = System.currentTimeMillis() + Math.min(600_000L, 30_000L << Math.min(5, wrongCodes - 5));
     }
 
     private boolean codeOk(String code) {
@@ -259,7 +271,7 @@ final class SetupServer {
     private static void send(OutputStream out, int status, String type, String body) throws Exception { sendBytes(out, status, type, body.getBytes(StandardCharsets.UTF_8)); }
 
     private static void sendBytes(OutputStream out, int status, String type, byte[] body) throws Exception {
-        String head = "HTTP/1.0 " + status + " " + (status == 200 ? "OK" : status == 403 ? "Forbidden" : status == 404 ? "Not Found" : "Error") + "\r\n"
+        String head = "HTTP/1.0 " + status + " " + (status == 200 ? "OK" : status == 403 ? "Forbidden" : status == 404 ? "Not Found" : status == 429 ? "Too Many Requests" : "Error") + "\r\n"
                 + "Content-Type: " + type + "\r\nContent-Length: " + body.length + "\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\n\r\n";
         out.write(head.getBytes(StandardCharsets.ISO_8859_1)); out.write(body); out.flush();
     }
