@@ -11,14 +11,14 @@ The checklist for the first public release. Items marked (owner) need the mainta
 ## 2. Setup experience
 - [ ] `PROMPT.md` tried from scratch on a clean machine by someone who has not seen the project.
 - [ ] README setup section matches what the prompt does, step for step.
-- [ ] A release APK attached to a GitHub Release with its SHA-256, so nobody has to install a JDK to try it.
+- [ ] A release APK attached to a GitHub Release with its SHA-256, so nobody has to install a JDK to try it. (`departures-v0.1.0.apk` built and signed Oct 31; the Release itself is the owner's.)
 
 ## 3. Security and privacy
-- [ ] `tools/check-secrets.sh --all` clean; pre-commit hook documented; CI (`checks.yml`) green with gitleaks over the full history.
-- [ ] History review: every commit inspected for config, keystores, screenshots that show calendar titles the author does not want public.
+- [x] `tools/check-secrets.sh --all` clean; pre-commit hook documented; CI (`checks.yml`) green with gitleaks over the full history.
+- [x] History review: every commit inspected for config, keystores, screenshots that show calendar titles the author does not want public (Oct 31; commits rewritten to the 0xdravyn noreply identity).
 - [x] Screenshots in the README taken from the app's demo mode (sample data), on the real TV.
 - [ ] SECURITY.md reporting path tested (a private contact or GitHub private vulnerability reporting enabled).
-- [ ] Repository settings: default branch protected, secret scanning and push protection on, Discussions on if wanted.
+- [x] Repository settings: main ruleset (no deletion, no force push), secret scanning and push protection on.
 
 ## 3b. Audit, Oct 31 (security, efficiency, packaging, energy)
 
@@ -34,12 +34,12 @@ Done in one pass over the whole tree; each line says what was checked and what, 
 - **Open items:** a second TV for compatibility; a reviewer who has not seen the project to read `SECURITY.md` and `PROMPT.md` cold; the TX calendar's Workspace policy on secret addresses (works today).
 
 ## 4. Repository presentation (CleanYourTV style)
-- [x] README in CleanYourTV shape: banner, pitch, badges, "Start here", "What you get" with screenshots, setup, kiosk notes, "Restoring", "Questions people ask", "The story" (slot), "Contributing", "Licence". Support badge waits for the handle.
-- [ ] "The story" (owner): short and plain, in the maintainer's own voice: the debloated TV, the Vestaboard idea, why a screensaver.
+- [x] README: banner, tagline, intro, badges, "Start here", "What you get" with the four views, "Two ways to run it", "Setup instructions", "The settings page", "Security", "Restoring your TV", "Contributing", "Support", "Licence".
+- [x] "The story": dropped from the README; the owner tells it on X instead.
 - [x] `FUNDING.yml` with the Buy Me a Coffee handle (dravyn), support badge and a Support section in the README.
-- [ ] Licence notes for the bundled font (OFL) kept next to it.
+- [x] Licence notes for the bundled font (OFL) kept next to it.
 
 ## 5. Launch
-- [ ] X post drafted by the author and posted by the author (owner): what it is, one short clip of the flips, the repo link. Nothing is scheduled or posted by tooling.
+- [ ] X post drafted by the author and posted by the author (owner): what it is, one short clip of the flips, the repo link. Nothing is scheduled or posted by tooling. Before the post: the GitHub Release (so the README's download link works) and the social preview image (`docs/social-preview.png`, Settings > General > Social preview) so the link card shows the board.
 - [ ] A CleanYourTV `SHOWCASE.md` row, if the maintainers accept screensavers that work with their launcher.
 - [ ] Watch the first issues for a week; fix setup problems before features.

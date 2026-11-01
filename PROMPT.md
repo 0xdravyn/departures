@@ -20,7 +20,7 @@ Connect
 
 Build or take the APK
 - If a release APK is in the repository's Releases page, prefer it; otherwise build with JDK 17 and the Android SDK: `./gradlew assembleRelease` (it signs with the debug key, which is fine for one TV). Tell me what you had to install on this computer.
-- `adb install -r app/build/outputs/apk/release/app-release.apk`, then confirm `adb shell dumpsys package app.departures.tv` shows `User 0: ... installed=true`; if not, `adb shell pm install-existing --user 0 app.departures.tv` (a TV with a second profile keeps per-user install state, and the app, its screensaver and its import stay invisible otherwise).
+- `adb install -r app/build/outputs/apk/release/departures-v0.1.0.apk`, then confirm `adb shell dumpsys package app.departures.tv` shows `User 0: ... installed=true`; if not, `adb shell pm install-existing --user 0 app.departures.tv` (a TV with a second profile keeps per-user install state, and the app, its screensaver and its import stay invisible otherwise).
 
 Grant the three permissions it cannot ask for itself
 - `adb shell pm grant app.departures.tv android.permission.READ_TV_LISTINGS` (the Keep watching? view).
