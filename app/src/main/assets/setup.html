@@ -35,6 +35,8 @@
   .row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; }
   .row + .row { border-top:1px solid var(--line); }
   .row label.name { flex:1; font-weight:600; }
+  .edit { display:inline-block; margin-left:8px; padding:2px 8px; border:1px solid var(--line); border-radius:6px; color:var(--dim); font-size:12px; font-weight:600; vertical-align:middle; cursor:pointer; }
+  .edit:hover { color:var(--ink); border-color:var(--dim); }
   .help { color:var(--dim); font-size:14px; margin:4px 0 10px; }
   .steps { color:var(--dim); font-size:14px; margin:0 0 10px; padding-left:22px; }
   .steps li { margin:4px 0; }
@@ -106,7 +108,7 @@
   <div class="tab on" id="content">
     <p class="tabnote">What the board shows: your place, your calendars, your custom message, your markets.</p>
 
-    <section>
+    <section id="sec-today">
       <h2>TODAY VIEW · LOCATION AND TIME</h2>
       <p class="help">Type your city and pick it from the list. The weather follows it; the clock keeps the TV's own time.</p>
       <div class="field" style="position:relative">
@@ -139,9 +141,8 @@
       </div>
     </section>
 
-    <section>
+    <section id="sec-message">
       <h2>CUSTOM MESSAGE VIEW</h2>
-      <p class="help">Its own view in the rotation: a full board of yours, separate from the Today view.</p>
       <div class="board" id="board"></div>
       <div class="count">22 × 6 · a chip takes one cell</div>
       <div class="chips" id="chips"><i data-c="r" style="background:var(--red)"></i><i data-c="o" style="background:var(--orange)"></i><i data-c="y" style="background:var(--yellow)"></i><i data-c="g" style="background:var(--green)"></i><i data-c="b" style="background:var(--blue)"></i><i data-c="v" style="background:var(--violet)"></i><i data-c="w" style="background:var(--white)"></i></div>
@@ -153,7 +154,7 @@
       <div class="field"><input class="msg" type="text" maxlength="44" placeholder="Line 6"></div>
     </section>
 
-    <section>
+    <section id="sec-markets">
       <h2>MARKETS VIEW</h2>
       <p class="help">Up to five. The name on the board is yours; left blank, the symbol is shown.</p>
       <ul class="steps">
@@ -173,10 +174,10 @@
     <section>
       <h2>VIEWS</h2>
       <p class="help">Which views the board cycles through, and for how long each stays.</p>
-      <div class="row"><label class="name">Today</label><select class="secs" data-k="today"></select><div class="toggle on vtoggle" data-k="today"></div></div>
+      <div class="row"><label class="name">Today <span class="edit" data-go="sec-today">Edit</span></label><select class="secs" data-k="today"></select><div class="toggle on vtoggle" data-k="today"></div></div>
       <div class="row"><label class="name">Keep watching?</label><select class="secs" data-k="keep_watching"></select><div class="toggle on vtoggle" data-k="keep_watching"></div></div>
-      <div class="row"><label class="name">Markets</label><select class="secs" data-k="markets"></select><div class="toggle on vtoggle" data-k="markets"></div></div>
-      <div class="row"><label class="name">Custom message</label><select class="secs" data-k="message"></select><div class="toggle on vtoggle" data-k="message"></div></div>
+      <div class="row"><label class="name">Markets <span class="edit" data-go="sec-markets">Edit</span></label><select class="secs" data-k="markets"></select><div class="toggle on vtoggle" data-k="markets"></div></div>
+      <div class="row"><label class="name">Custom message <span class="edit" data-go="sec-message">Edit</span></label><select class="secs" data-k="message"></select><div class="toggle on vtoggle" data-k="message"></div></div>
       <p class="help" style="margin-top:10px" id="watchnext">Keep watching? reads the TV's own Continue watching row.</p>
     </section>
 
@@ -244,6 +245,7 @@
   // ----- tabs, segmented controls, toggles -----
   $$('.tabs button').forEach(b => b.addEventListener('click', () => { $$('.tabs button').forEach(x => x.classList.toggle('on', x === b)); $$('.tab').forEach(t => t.classList.toggle('on', t.id === b.dataset.tab)); window.scrollTo(0, 0); }));
   document.addEventListener('click', e => {
+    const ed = e.target.closest('.edit'); if (ed) { $('.tabs button[data-tab=content]').click(); const sec = document.getElementById(ed.dataset.go); if (sec) sec.scrollIntoView({ behavior: 'smooth' }); return; }
     const sp = e.target.closest('.seg span'); if (sp) { sp.parentElement.querySelectorAll('span').forEach(x => x.classList.toggle('on', x === sp)); if (sp.parentElement.id === 'todayseg') todayMode(); return; }
     const tg = e.target.closest('.toggle'); if (tg) tg.classList.toggle('on');
   });
