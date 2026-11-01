@@ -99,7 +99,7 @@ Issues and pull requests are welcome; [`CONTRIBUTING.md`](CONTRIBUTING.md) has t
 
 ## Support
 
-I love coffee, and it also keeps the TV on :) If Departures earns a place on your wall, [buy me one](https://buymeacoffee.com/dravyn).
+I love coffee, so if Departures earned a place on your wall, [buy me one here](https://buymeacoffee.com/dravyn) :)
 
 ## Licence
 
