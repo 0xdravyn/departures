@@ -18,8 +18,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
-      - uses: android-actions/setup-android@v3
+      # The Ubuntu runner ships the Android SDK; the Gradle wrapper pins Gradle and the plugin fetches what it needs.
       - name: Build a release APK (debug-signed; no keystore in CI)
-        run: gradle -p . assembleRelease -q --console=plain
+        run: ./gradlew assembleRelease -q --console=plain
       - uses: actions/upload-artifact@v4
         with: { name: departures-apk, path: app/build/outputs/apk/release/app-release.apk }
