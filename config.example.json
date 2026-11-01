@@ -6,33 +6,39 @@
   },
   "units": "metric",
   "clock": "12h",
+  "calendars": [
+    {
+      "label": "Home",
+      "url": "https://calendar.google.com/calendar/ical/REPLACE/private-REPLACE/basic.ics"
+    }
+  ],
+  "today": {
+    "mode": "calendars",
+    "lines": [
+      "",
+      ""
+    ]
+  },
+  "message": [
+    "{g} BACK AT 6",
+    "",
+    "DINNER IS IN THE OVEN",
+    "{o} 180 FOR 40 MIN",
+    "",
+    "{r}{r}{r} LOVE YOU {r}{r}{r}"
+  ],
+  "markets": [
+    "^GSPC",
+    "NVDA",
+    "GOOGL",
+    "bitcoin",
+    "GC=F"
+  ],
   "quiet_hours": {
     "from": "23:00",
     "to": "07:00",
     "dim": 0.3
   },
-  "calendars": [
-    {
-      "label": "home",
-      "url": "https://calendar.google.com/calendar/ical/REPLACE/private-REPLACE/basic.ics"
-    },
-    {
-      "label": "work",
-      "url": "https://calendar.google.com/calendar/ical/REPLACE/private-REPLACE/basic.ics"
-    }
-  ],
-  "faces": {
-    "now_seconds": 60,
-    "keep_watching_seconds": 30,
-    "markets_seconds": 60
-  },
-  "markets": [
-    "S&P 500",
-    "NVIDIA",
-    "GOOGLE",
-    "bitcoin",
-    "gold"
-  ],
   "calendar": {
     "lookahead_days": 1
   }

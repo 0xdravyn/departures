@@ -21,6 +21,9 @@ final class Data {
     volatile List<Faces.Event> events = Collections.emptyList();
     volatile Faces.Resume resume;
     volatile List<Markets.Quote> quotes = Collections.emptyList();
+    /** Where the setup page is ("192.0.2.10:8787"), for the board of a TV with nothing configured yet; null off Wi-Fi. */
+    volatile String setupAddress;
+    final String pairCode;
 
     private final Context ctx;
     private final Listener listener;
@@ -29,7 +32,7 @@ final class Data {
     private Handler bg;
     private final Runnable refresh = new Runnable() { @Override public void run() { refreshNow(true); if (bg != null) bg.postDelayed(this, 5 * 60_000L); } };
 
-    Data(Context ctx, Config cfg, Listener listener) { this.ctx = ctx.getApplicationContext(); this.cfg = cfg; this.listener = listener; }
+    Data(Context ctx, Config cfg, Listener listener) { this.ctx = ctx.getApplicationContext(); this.cfg = cfg; this.listener = listener; this.pairCode = Config.pairCode(this.ctx); }
 
     void start() {
         thread = new HandlerThread("departures-data"); thread.start(); bg = new Handler(thread.getLooper());
@@ -50,6 +53,8 @@ final class Data {
 
     private void refreshNow(boolean network) {
         boolean changed = false;
+        String addr = SetupServer.addressLine();
+        if (addr == null ? setupAddress != null : !addr.equals(setupAddress)) { setupAddress = addr; changed = true; }
         Faces.Weather w = Weather.load(ctx, cfg, network);
         if (w != null && (weather == null || !same(w, weather))) { weather = w; changed = true; }
         List<Faces.Event> ev = Calendars.upcoming(ctx, cfg, network);

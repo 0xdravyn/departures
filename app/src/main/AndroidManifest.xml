@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <!-- To name the app behind a Watch Next entry ("Netflix", not its package id): see other TV apps' labels. -->
     <queries><intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LEANBACK_LAUNCHER" /></intent></queries>
-    <application android:allowBackup="false" android:label="@string/app_name" android:icon="@drawable/banner" android:banner="@drawable/banner"
+    <application android:allowBackup="false" android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:banner="@drawable/banner"
         android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" android:usesCleartextTraffic="false">
         <!-- The screensaver itself. -->
         <service android:name=".DeparturesDream" android:exported="true" android:permission="android.permission.BIND_DREAM_SERVICE">

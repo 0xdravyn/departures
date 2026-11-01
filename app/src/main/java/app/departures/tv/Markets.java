@@ -57,13 +57,37 @@ final class Markets {
         return out;
     }
 
-    /** {price, change % versus the previous close, 1 if the regular session is open}, or null. */
-    private static double[] yahoo(String symbol) {
+    /** One instrument, looked up afresh with its name: what the setup page shows under each symbol. */
+    static final class Lookup { boolean ok; String name = ""; double price, changePct; }
+    static Lookup lookup(Config.Market m) {
+        Lookup l = new Lookup();
+        try {
+            if (m.source.equals("coingecko")) {
+                String body = Net.get("https://api.coingecko.com/api/v3/coins/" + java.net.URLEncoder.encode(m.symbol.toLowerCase(), "UTF-8") + "?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false", null, 8000);
+                if (body == null) return l;
+                JSONObject o = new JSONObject(body);
+                JSONObject md = o.getJSONObject("market_data");
+                l.name = o.optString("name", m.symbol); l.price = md.getJSONObject("current_price").getDouble("usd"); l.changePct = md.optDouble("price_change_percentage_24h", 0); l.ok = true;
+            } else {
+                String[] name = new String[1];
+                double[] p = yahoo(m.symbol, name);
+                if (p == null) return l;
+                l.name = name[0] == null || name[0].isEmpty() ? m.symbol : name[0]; l.price = p[0]; l.changePct = p[1]; l.ok = true;
+            }
+        } catch (Exception e) { l.ok = false; }
+        return l;
+    }
+
+    private static double[] yahoo(String symbol) { return yahoo(symbol, null); }
+
+    /** {price, change % versus the previous close, 1 if the regular session is open}, or null; name[0] gets the instrument's name when asked. */
+    private static double[] yahoo(String symbol, String[] name) {
         try {
             String url = "https://query1.finance.yahoo.com/v8/finance/chart/" + java.net.URLEncoder.encode(symbol, "UTF-8") + "?range=5d&interval=1d";
             String body = Net.get(url, null, 8000);
             if (body == null) return null;
             JSONObject meta = new JSONObject(body).getJSONObject("chart").getJSONArray("result").getJSONObject(0).getJSONObject("meta");
+            if (name != null) name[0] = meta.optString("shortName", meta.optString("longName", ""));
             double price = meta.getDouble("regularMarketPrice");
             double prev = meta.optDouble("regularMarketPreviousClose", Double.NaN);
             if (Double.isNaN(prev)) {

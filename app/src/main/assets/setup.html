@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Departures setup</title>
+<style>
+  :root { --bg:#000; --panel:#111; --cell:#1c1c1c; --line:#262626; --ink:#efe9dc; --dim:#8f8a80; --faint:#5a564f;
+          --red:#e03a2f; --orange:#f08a1d; --yellow:#e9c53b; --green:#3ba55c; --blue:#3b7ddb; --violet:#8b5cf6; --white:#efe9dc; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif; }
+  main { max-width:560px; margin:0 auto; padding:0 16px 150px; }
+  header { padding:28px 0 0; }
+  .logo { display:block; margin-bottom:14px; }
+  .mark { font-weight:800; letter-spacing:.32em; font-size:13px; color:var(--dim); }
+  h1 { margin:6px 0 2px; font-size:26px; font-weight:700; letter-spacing:-.01em; }
+  .bar { display:flex; align-items:center; gap:8px; margin:10px 0 0; padding:9px 12px; background:var(--panel); border:1px solid var(--line); border-radius:8px; font-size:14px; }
+  .bar .addr { margin-left:auto; color:var(--dim); font-variant-numeric:tabular-nums; }
+  .dot { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 0 3px rgba(59,165,92,.2); flex:none; }
+  .dot.off { background:var(--faint); box-shadow:none; }
+  .code { margin-top:14px; }
+  .code input[type=text] { width:150px; letter-spacing:.3em; font-size:20px; text-align:center; display:block; margin-bottom:8px; }
+  .code input.bad { border-color:var(--red); animation:shake .3s; } .code input.good { border-color:var(--green); }
+  @keyframes shake { 25% { transform:translateX(-4px) } 75% { transform:translateX(4px) } }
+  .code .help { margin:0; }
+  body.locked .tabs, body.locked .tab, body.locked footer { display:none; }
+  .tabs { display:flex; gap:4px; margin:22px 0 0; background:var(--cell); border-radius:12px; padding:4px; }
+  .tabs button { flex:1; background:none; border:0; border-radius:9px; color:var(--dim); font:inherit; font-size:17px; font-weight:700; padding:13px 0; }
+  .tabs button.on { background:var(--ink); color:#000; }
+  .tab { display:none; } .tab.on { display:block; }
+  .tabnote { color:var(--dim); font-size:14px; margin:14px 0 0; }
+  section { margin-top:26px; border-top:1px solid var(--line); padding-top:18px; }
+  section:first-of-type { border-top:0; margin-top:8px; }
+  h2 { margin:0 0 12px; font-size:12px; letter-spacing:.28em; color:var(--dim); font-weight:700; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; }
+  .row + .row { border-top:1px solid var(--line); }
+  .row label.name { flex:1; font-weight:600; }
+  .help { color:var(--dim); font-size:14px; margin:4px 0 10px; }
+  .steps { color:var(--dim); font-size:14px; margin:0 0 10px; padding-left:22px; }
+  .steps li { margin:4px 0; }
+  .steps b, .help b { color:var(--ink); font-weight:600; }
+  .status { font-size:14px; color:var(--dim); }
+  .ok { color:var(--green); } .warn { color:var(--orange); } .bad { color:var(--red); }
+  input[type=text], input[type=number], input[type=password], input[type=time] {
+    width:100%; background:var(--cell); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:11px 12px; font:inherit; }
+  input[type=number], input[type=time] { width:auto; }
+  input::placeholder { color:var(--faint); }
+  .field { margin:8px 0; }
+  .menu { position:absolute; left:0; right:0; top:calc(100% + 4px); background:#161616; border:1px solid var(--line); border-radius:8px; overflow:hidden; z-index:2; }
+  .menu div { padding:10px 12px; font-size:15px; display:flex; justify-content:space-between; gap:10px; cursor:pointer; }
+  .menu div + div { border-top:1px solid var(--line); }
+  .menu span { color:var(--dim); font-size:13px; white-space:nowrap; }
+  .seg { display:inline-flex; background:var(--cell); border-radius:8px; padding:3px; }
+  .seg span { padding:7px 12px; border-radius:6px; color:var(--dim); font-size:14px; font-weight:600; cursor:pointer; }
+  .seg span.on { background:var(--ink); color:#000; }
+  .toggle { width:48px; height:28px; border-radius:14px; background:var(--cell); position:relative; flex:none; cursor:pointer; }
+  .toggle::after { content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:var(--faint); }
+  .toggle.on { background:var(--green); } .toggle.on::after { left:23px; background:#fff; }
+  select { background:var(--cell); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font:inherit; font-size:14px; }
+  .cal { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; margin:10px 0; }
+  .cal .foot { display:flex; justify-content:space-between; align-items:center; gap:10px; padding-top:4px; }
+  .cal .rm { color:var(--faint); font-size:13px; cursor:pointer; margin-left:10px; }
+  .btn { display:inline-block; background:var(--cell); color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:9px 14px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+  .btn.primary { background:var(--ink); color:#000; border-color:var(--ink); }
+  .btn.ghost { color:var(--dim); border-style:dashed; width:100%; text-align:center; }
+  .btn.danger { color:var(--red); border-color:#3a1f1d; white-space:nowrap; flex:none; }
+  .btn.busy { opacity:.5; pointer-events:none; }
+  footer .btn { letter-spacing:.12em; transition:background .25s, color .25s, transform .25s; }
+  footer .btn.done { background:var(--green); border-color:var(--green); color:#fff; animation:applied .9s ease; }
+  @keyframes applied { 0% { transform:scale(1) } 30% { transform:scale(.97) } 60% { transform:scale(1.02) } 100% { transform:scale(1) } }
+  .reset { margin-top:28px; padding-top:18px; border-top:1px solid var(--line); display:flex; justify-content:center; }
+  .chips { display:flex; gap:8px; margin:10px 0; }
+  .chips i { width:28px; height:28px; border-radius:6px; display:block; cursor:pointer; }
+  .board { display:grid; grid-template-columns:repeat(22, 1fr); gap:2px; background:#000; padding:8px; border-radius:8px; border:1px solid var(--line); margin:12px 0 4px; }
+  .board i { aspect-ratio:1/1.36; background:var(--cell); border-radius:2px; display:flex; align-items:center; justify-content:center; font:700 11px/1 "Helvetica Neue", Arial, sans-serif; color:var(--ink); }
+  .board i.r{background:var(--red)} .board i.o{background:var(--orange)} .board i.y{background:var(--yellow)} .board i.g{background:var(--green)} .board i.b{background:var(--blue)} .board i.v{background:var(--violet)} .board i.w{background:var(--white)}
+  .count { color:var(--faint); font-size:12px; text-align:right; }
+  pre { background:var(--cell); border-radius:8px; padding:10px 12px; font-size:12px; overflow-x:auto; color:var(--ink); margin:8px 0; white-space:pre-wrap; word-break:break-all; }
+  .market { padding:8px 0; border-top:1px solid var(--line); }
+  .market:first-of-type { border-top:0; }
+  .market .pair { display:grid; grid-template-columns:1fr 128px; gap:8px; }
+  .market .resolved { font-size:13px; color:var(--dim); padding:4px 2px 0; min-height:18px; }
+  footer { position:fixed; left:0; right:0; bottom:0; background:linear-gradient(transparent, #000 30%); padding:28px 16px 20px; }
+  footer .inner { max-width:560px; margin:0 auto; }
+  footer .btn { width:100%; text-align:center; padding:14px; font-size:16px; }
+  footer p { margin:8px 0 0; text-align:center; font-size:12px; color:var(--faint); }
+  #toast { position:fixed; left:50%; bottom:118px; transform:translateX(-50%); background:var(--ink); color:#000; padding:10px 16px; border-radius:8px; font-weight:600; font-size:14px; opacity:0; transition:opacity .2s; pointer-events:none; }
+  #toast.show { opacity:1; }
+</style>
+</head>
+<body class="locked">
+<main>
+  <header>
+    <svg class="logo" viewBox="0 0 100 100" width="44" height="44" aria-hidden="true"><path fill="#efe9dc" fill-rule="evenodd" d="M28 14 h44 a10 10 0 0 1 10 10 v24.5 h-64 v-24.5 a10 10 0 0 1 10 -10 z M18 51.5 h64 v24.5 a10 10 0 0 1 -10 10 h-44 a10 10 0 0 1 -10 -10 z"/></svg>
+    <div class="mark">DEPARTURES</div>
+    <h1>Set up your board</h1>
+    <div class="bar" id="bar"><i class="dot off"></i><span id="barname">Not connected</span><span class="addr" id="baraddr"></span></div>
+    <div class="code"><input type="text" id="code" inputmode="numeric" maxlength="4" placeholder="····" autocomplete="off"><span class="help" id="codehelp">The code on the TV: hold OK › Settings.</span></div>
+    <nav class="tabs">
+      <button class="on" data-tab="content">Content</button>
+      <button data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <!-- ============ CONTENT: what the board shows ============ -->
+  <div class="tab on" id="content">
+    <p class="tabnote">What the board shows: your place, your calendars, your custom message, your markets.</p>
+
+    <section>
+      <h2>TODAY VIEW · LOCATION AND TIME</h2>
+      <p class="help">Type your city and pick it from the list. The weather follows it; the clock keeps the TV's own time.</p>
+      <div class="field" style="position:relative">
+        <input type="text" id="city" placeholder="City" autocomplete="off">
+        <div class="menu" id="citymenu" hidden></div>
+      </div>
+      <div class="status" id="citypick">No location yet</div>
+      <div class="row" style="margin-top:8px"><label class="name">Clock</label><div class="seg" id="clock"><span class="on" data-v="12">12 h</span><span data-v="24">24 h</span></div></div>
+      <div class="row"><label class="name">Temperature</label><div class="seg" id="units"><span class="on" data-v="c">°C</span><span data-v="f">°F</span></div></div>
+    </section>
+
+    <section>
+      <h2>TODAY VIEW · CALENDARS</h2>
+      <p class="help">The Today view shows your next event under the date, time and weather. To connect a calendar:</p>
+      <ol class="steps">
+        <li>Open Google Calendar on the web, then Settings, and pick the calendar on the left.</li>
+        <li>Scroll to "Integrate calendar" and copy the <b>Secret address in iCal format</b>.</li>
+        <li>Paste it below, hit Test, then APPLY.</li>
+      </ol>
+      <p class="help">Your calendar details are stored locally on the TV only.</p>
+      <div class="row"><label class="name">Under the weather, show</label><div class="seg" id="todayseg"><span class="on" data-v="calendars">Calendar events</span><span data-v="message">Two lines of mine</span></div></div>
+      <div id="calblock">
+        <div id="cals"></div>
+        <span class="btn ghost" id="addcal">+ Add another calendar (up to three)</span>
+      </div>
+      <div id="msgblock" hidden>
+        <p class="help">Two lines of 21 characters on the Today view, in place of the event rows. (The Custom message view below is a separate, full board.)</p>
+        <div class="field"><input type="text" class="tline" maxlength="21" placeholder="Line 1"></div>
+        <div class="field"><input type="text" class="tline" maxlength="21" placeholder="Line 2"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>CUSTOM MESSAGE VIEW</h2>
+      <p class="help">Its own view in the rotation: a full board of yours, separate from the Today view.</p>
+      <div class="board" id="board"></div>
+      <div class="count">22 × 6 · a chip takes one cell</div>
+      <div class="chips" id="chips"><i data-c="r" style="background:var(--red)"></i><i data-c="o" style="background:var(--orange)"></i><i data-c="y" style="background:var(--yellow)"></i><i data-c="g" style="background:var(--green)"></i><i data-c="b" style="background:var(--blue)"></i><i data-c="v" style="background:var(--violet)"></i><i data-c="w" style="background:var(--white)"></i></div>
+      <div class="field"><input class="msg" type="text" maxlength="44" placeholder="Line 1"></div>
+      <div class="field"><input class="msg" type="text" maxlength="44" placeholder="Line 2"></div>
+      <div class="field"><input class="msg" type="text" maxlength="44" placeholder="Line 3"></div>
+      <div class="field"><input class="msg" type="text" maxlength="44" placeholder="Line 4"></div>
+      <div class="field"><input class="msg" type="text" maxlength="44" placeholder="Line 5"></div>
+      <div class="field"><input class="msg" type="text" maxlength="44" placeholder="Line 6"></div>
+    </section>
+
+    <section>
+      <h2>MARKETS VIEW</h2>
+      <p class="help">Up to five. The name on the board is yours; left blank, the symbol is shown.</p>
+      <ul class="steps">
+        <li>Stocks, indices, futures: the symbol on <b>finance.yahoo.com</b> (NVDA, ^GSPC, GC=F).</li>
+        <li>Crypto: the coin id in the <b>coingecko.com</b> address (bitcoin, ethereum).</li>
+      </ul>
+      <div id="markets"></div>
+    </section>
+
+    <div class="reset"><span class="btn danger" id="resetcontent">Reset settings on this page</span></div>
+  </div>
+
+  <!-- ============ SETTINGS: what the TV's own settings page also offers ============ -->
+  <div class="tab" id="settings">
+    <p class="tabnote">The same settings as on the TV (hold OK on the remote), in one place.</p>
+
+    <section>
+      <h2>VIEWS</h2>
+      <p class="help">Which views the board cycles through, and for how long each stays.</p>
+      <div class="row"><label class="name">Today</label><select class="secs" data-k="today"></select><div class="toggle on vtoggle" data-k="today"></div></div>
+      <div class="row"><label class="name">Keep watching?</label><select class="secs" data-k="keep_watching"></select><div class="toggle on vtoggle" data-k="keep_watching"></div></div>
+      <div class="row"><label class="name">Markets</label><select class="secs" data-k="markets"></select><div class="toggle on vtoggle" data-k="markets"></div></div>
+      <div class="row"><label class="name">Custom message</label><select class="secs" data-k="message"></select><div class="toggle on vtoggle" data-k="message"></div></div>
+      <p class="help" style="margin-top:10px" id="watchnext">Keep watching? reads the TV's own Continue watching row.</p>
+    </section>
+
+    <section>
+      <h2>BOARD</h2>
+      <div class="row"><label class="name">Flip animation</label><div class="seg" id="flips"><span data-v="off">Off</span><span class="on" data-v="on">On</span></div></div>
+      <div class="row"><label class="name">Brightness</label><div class="seg" id="bright"><span class="on" data-v="1">Full</span><span data-v="0.8">80%</span><span data-v="0.6">60%</span><span data-v="0.4">40%</span></div></div>
+    </section>
+
+    <section>
+      <h2>QUIET HOURS</h2>
+      <div class="row"><label class="name">Quiet hours</label><div class="toggle on" id="quiet"></div></div>
+      <div class="row"><label class="name">From</label><input type="time" id="qfrom" value="23:00"></div>
+      <div class="row"><label class="name">Until</label><input type="time" id="qto" value="07:00"></div>
+    </section>
+
+    <section>
+      <h2>SCREENSAVER MODE</h2>
+      <p class="help">Departures runs as an app from your home screen any time. Screensaver mode also starts it by itself when the TV sits idle.</p>
+      <div class="status">TV screensaver now: <b id="sscur">…</b></div>
+      <div class="row" style="border:0; padding-top:12px"><span class="btn primary" id="ssbtn">Enable screensaver mode</span></div>
+      <div class="row"><label class="name">Start after the TV idles for</label><span><input type="number" id="ssmin" min="1" max="120" value="2" style="width:64px; text-align:center"> min</span></div>
+      <p class="help" style="margin-top:10px">Overrides the TV's own screensaver settings; the TV's sleep timer still applies.</p>
+      <div id="ssgrant" hidden><p class="help warn">Screensaver mode needs two one-time permissions, granted from a computer with ADB:</p><pre id="ssgrantlines"></pre></div>
+    </section>
+
+    <div class="reset"><span class="btn danger" id="resetsettings">Reset settings on this page</span></div>
+  </div>
+</main>
+
+<footer><div class="inner">
+  <span class="btn primary" id="apply">APPLY</span>
+  <p>Everything you enter is stored locally on your TV only. The page works while Departures is on the TV screen.</p>
+</div></footer>
+<div id="toast"></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const SECONDS = [15, 30, 60, 120, 300, 600];
+  let code = null, state = null, picked = null;
+
+  // ----- the code: checked by the TV on every request; remembered on this device for 30 days -----
+  try { const saved = JSON.parse(localStorage.getItem('departures_code') || 'null'); if (saved && saved.until > Date.now()) code = saved.code; } catch (e) {}
+  const codeIn = $('#code'), codeHelp = $('#codehelp'), dot = $('#bar .dot'), barname = $('#barname'), baraddr = $('#baraddr');
+  async function api(path, body) {
+    const r = await fetch('/api/' + path, { method: body === undefined ? 'GET' : 'POST', headers: { 'X-Code': code || '', 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+    if (r.status === 403) { lock('TV not found'); throw new Error('code'); }
+    return r.json();
+  }
+  function lock(msg) { document.body.classList.add('locked'); codeIn.classList.remove('good'); if (msg) { codeIn.classList.add('bad'); codeHelp.textContent = msg; codeHelp.className = 'help warn'; codeIn.select(); } dot.className = 'dot off'; barname.textContent = 'Not connected'; }
+  async function tryCode(c) {
+    code = c;
+    try { const s = await api('state'); } catch (e) { return; }
+    codeIn.classList.remove('bad'); codeIn.classList.add('good'); codeHelp.textContent = 'TV connected'; codeHelp.className = 'help ok';
+    try { localStorage.setItem('departures_code', JSON.stringify({ code: c, until: Date.now() + 30 * 86400000 })); } catch (e) {}
+    document.body.classList.remove('locked');
+    await refresh();
+  }
+  codeIn.addEventListener('input', () => { codeIn.classList.remove('bad', 'good'); if (codeIn.value.length === 4) tryCode(codeIn.value); else lock(); });
+  if (code) { codeIn.value = code; tryCode(code); }
+
+  async function refresh() { state = await api('state'); render(); }
+
+  // ----- tabs, segmented controls, toggles -----
+  $$('.tabs button').forEach(b => b.addEventListener('click', () => { $$('.tabs button').forEach(x => x.classList.toggle('on', x === b)); $$('.tab').forEach(t => t.classList.toggle('on', t.id === b.dataset.tab)); window.scrollTo(0, 0); }));
+  document.addEventListener('click', e => {
+    const sp = e.target.closest('.seg span'); if (sp) { sp.parentElement.querySelectorAll('span').forEach(x => x.classList.toggle('on', x === sp)); if (sp.parentElement.id === 'todayseg') todayMode(); return; }
+    const tg = e.target.closest('.toggle'); if (tg) tg.classList.toggle('on');
+  });
+  const segVal = id => $('#' + id + ' span.on').dataset.v;
+  const setSeg = (id, v) => $$('#' + id + ' span').forEach(x => x.classList.toggle('on', x.dataset.v === String(v)));
+  function todayMode() { const msg = segVal('todayseg') === 'message'; $('#calblock').hidden = msg; $('#msgblock').hidden = !msg; }
+
+  // ----- city picker: a list only while typing, gone once chosen -----
+  const city = $('#city'), menu = $('#citymenu'), pick = $('#citypick');
+  let cityTimer = null;
+  city.addEventListener('input', () => { clearTimeout(cityTimer); const q = city.value.trim(); if (q.length < 2) { menu.hidden = true; return; } cityTimer = setTimeout(async () => {
+    let res = []; try { res = (await api('geocode?q=' + encodeURIComponent(q))).results || []; } catch (e) {}
+    menu.innerHTML = ''; menu.hidden = res.length === 0;
+    for (const r of res) { const d = document.createElement('div'); const name = [r.name, r.admin1, r.country].filter(Boolean).join(', '); d.innerHTML = name + ' <span>' + (r.timezone || '').replace('_', ' ') + '</span>';
+      d.addEventListener('click', () => { picked = { name: r.name, latitude: r.latitude, longitude: r.longitude }; city.value = r.name; pick.textContent = name + ' · ' + r.latitude.toFixed(2) + ', ' + r.longitude.toFixed(2); pick.className = 'status ok'; menu.hidden = true; }); menu.appendChild(d); }
+  }, 300); });
+  document.addEventListener('click', e => { if (!e.target.closest('#citymenu') && e.target !== city) menu.hidden = true; });
+
+  // ----- calendars -----
+  const cals = $('#cals');
+  function calCard(label, set, saved) {
+    const d = document.createElement('div'); d.className = 'cal';
+    d.innerHTML = '<div class="field" style="margin-top:0"><input type="text" class="clabel" placeholder="Calendar name"></div>'
+      + '<div class="field"><input type="password" class="curl" placeholder="Secret address in iCal format" autocomplete="off"></div>'
+      + '<div class="foot"><span class="status">Not connected</span><span><span class="btn test">Test</span><span class="rm">Remove</span></span></div>';
+    d.querySelector('.clabel').value = label || '';
+    d.dataset.saved = set ? String(saved) : '-1';
+    if (set) { d.dataset.set = '1'; d.querySelector('.curl').placeholder = 'Saved on the TV · paste a new address to replace it'; d.querySelector('.status').textContent = 'Saved on the TV'; d.querySelector('.status').className = 'status ok'; }
+    d.querySelector('.test').addEventListener('click', async () => {
+      const st = d.querySelector('.status'), url = d.querySelector('.curl').value.trim(); st.textContent = 'Testing…'; st.className = 'status';
+      try { const r = await api('calendar-test', { url, index: url ? -1 : parseInt(d.dataset.saved, 10) }); st.textContent = r.message; st.className = 'status ' + (r.ok ? 'ok' : 'bad'); } catch (e) { st.textContent = 'The TV did not answer'; st.className = 'status bad'; }
+    });
+    d.querySelector('.rm').addEventListener('click', () => { d.remove(); addBtn(); });
+    return d;
+  }
+  const addBtn = () => { $('#addcal').style.display = cals.children.length >= 3 ? 'none' : ''; };
+  $('#addcal').addEventListener('click', () => { if (cals.children.length < 3) cals.appendChild(calCard('', false)); addBtn(); });
+
+  // ----- message preview: chips as {r}..{w}, colour emoji to the nearest chip, no flap means no cell -----
+  const EMOJI = {'❤':'r','🧡':'o','💛':'y','💚':'g','💙':'b','💜':'v','🤍':'w','🟥':'r','🟧':'o','🟨':'y','🟩':'g','🟦':'b','🟪':'v','⬜':'w','🔴':'r','🟠':'o','🟡':'y','🟢':'g','🔵':'b','🟣':'v','⚪':'w','⭐':'y','🌟':'y','☀':'y'};
+  const FLAPS = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$&()-+=;:'\"%,.?/°";
+  const board = $('#board'), lines = $$('input.msg');
+  function cellsOf(s) {
+    const cells = []; s = (s || '').toUpperCase();
+    for (let i = 0; i < s.length && cells.length < 22; i++) {
+      const m = s.slice(i).match(/^\{([ROYGBVW])\}/); if (m) { cells.push({ chip: m[1].toLowerCase() }); i += 2; continue; }
+      const ch = String.fromCodePoint(s.codePointAt(i)); if (ch.length > 1) i++;
+      if (EMOJI[ch]) { cells.push({ chip: EMOJI[ch] }); continue; }
+      if (ch.codePointAt(0) > 0x24F) continue;
+      if (FLAPS.includes(ch)) cells.push({ ch });
+    }
+    while (cells.length < 22) cells.push({ ch: ' ' });
+    return cells;
+  }
+  function draw() { board.innerHTML = ''; for (const inp of lines) for (const c of cellsOf(inp.value)) { const el = document.createElement('i'); if (c.chip) el.className = c.chip; else el.textContent = c.ch; board.appendChild(el); } }
+  lines.forEach(l => l.addEventListener('input', draw)); draw();
+  let lastLine = lines[0];
+  lines.forEach(l => l.addEventListener('focus', () => lastLine = l));
+  $('#chips').addEventListener('click', e => { const i = e.target.closest('i'); if (!i) return; const l = lastLine, p = l.selectionStart ?? l.value.length; l.value = l.value.slice(0, p) + '{' + i.dataset.c + '}' + l.value.slice(p); l.focus(); l.setSelectionRange(p + 3, p + 3); draw(); });
+
+  // ----- markets: five symbols, each looked up by the TV -----
+  const mk = $('#markets');
+  for (let i = 0; i < 5; i++) { const d = document.createElement('div'); d.className = 'market'; d.innerHTML = '<div class="pair"><input type="text" class="sym" placeholder="' + (i === 0 ? 'Symbol or coin id' : '') + '" autocomplete="off"><input type="text" class="mlabel" maxlength="8" placeholder="' + (i === 0 ? 'On board' : '') + '" autocomplete="off"></div><div class="resolved"></div>'; mk.appendChild(d); }
+  $$('.sym').forEach(inp => { let t = null; inp.addEventListener('input', () => { clearTimeout(t); const res = inp.closest('.market').querySelector('.resolved'); res.textContent = ''; res.className = 'resolved'; if (!inp.value.trim()) return; t = setTimeout(() => lookup(inp), 600); }); });
+  async function lookup(inp) {
+    const res = inp.closest('.market').querySelector('.resolved'), s = inp.value.trim(); if (!s) return; res.textContent = 'Looking up…';
+    try { const r = await api('market', { symbol: s }); if (inp.value.trim() !== s) return;
+      if (r.ok) { res.textContent = r.name + ' · ' + r.source + ' · ' + r.price + ' · ' + r.change; res.className = 'resolved ok'; } else { res.textContent = 'Not found on ' + r.source; res.className = 'resolved bad'; } }
+    catch (e) { res.textContent = ''; }
+  }
+
+  // ----- settings controls -----
+  $$('select.secs').forEach(sel => { for (const s of SECONDS) { const o = document.createElement('option'); o.value = s; o.textContent = s >= 60 ? (s / 60) + ' min' : s + ' s'; sel.appendChild(o); } });
+  const ssbtn = $('#ssbtn'), ssmin = $('#ssmin');
+  ssbtn.addEventListener('click', async () => { ssbtn.classList.add('busy'); try { const s = await api('screensaver', { enable: !state.settings.screensaver.ours }); if (s.error) toast(s.error); state = s; render(); toast(state.settings.screensaver.ours ? 'Screensaver mode enabled' : 'Screensaver mode disabled'); } catch (e) {} ssbtn.classList.remove('busy'); });
+  ssmin.addEventListener('change', async () => { try { const s = await api('screensaver', { minutes: parseInt(ssmin.value, 10) || 2 }); if (s.error) toast(s.error); state = s; render(); } catch (e) {} });
+  $('#resetcontent').addEventListener('click', async () => { if (!confirm('Reset location, calendars, custom message and markets? Settings stay.')) return; state = await api('reset-content', {}); picked = null; render(); toast('Content reset'); });
+  $('#resetsettings').addEventListener('click', async () => { if (!confirm('Reset views, board, quiet hours and screensaver mode? Content stays.')) return; state = await api('reset-settings', {}); render(); toast('Settings reset'); });
+
+  // ----- render the TV's state into the page -----
+  function render() {
+    const c = state.content, s = state.settings;
+    dot.className = 'dot'; barname.textContent = state.tv || 'TV'; baraddr.textContent = state.address || '';
+    if (c.location) { picked = { name: c.location.name, latitude: c.location.latitude, longitude: c.location.longitude }; city.value = c.location.name || ''; pick.textContent = (c.location.name || 'Location') + ' · ' + c.location.latitude.toFixed(2) + ', ' + c.location.longitude.toFixed(2); pick.className = 'status ok'; }
+    else { picked = null; city.value = ''; pick.textContent = 'No location yet'; pick.className = 'status'; }
+    setSeg('clock', c.clock24 ? '24' : '12'); setSeg('units', c.imperial ? 'f' : 'c');
+    setSeg('todayseg', c.today.mode); todayMode();
+    $$('.tline').forEach((t, i) => t.value = c.today.lines[i] || '');
+    cals.innerHTML = ''; c.calendars.forEach((cal, i) => cals.appendChild(calCard(cal.label, cal.set, i))); if (cals.children.length === 0) cals.appendChild(calCard('', false)); addBtn();
+    lines.forEach((l, i) => l.value = c.message[i] || ''); draw();
+    $$('.market').forEach((d, i) => { const m = c.markets[i]; const inp = d.querySelector('.sym'); inp.value = m ? m.symbol : ''; d.querySelector('.mlabel').value = m && m.label !== m.symbol ? m.label : ''; const r = d.querySelector('.resolved'); r.textContent = ''; r.className = 'resolved'; if (inp.value) lookup(inp); });
+    for (const k of ['today', 'keep_watching', 'markets', 'message']) { const v = s.views[k]; $('.vtoggle[data-k=' + k + ']').classList.toggle('on', v.on); const sel = $('select.secs[data-k=' + k + ']'); sel.value = SECONDS.includes(v.seconds) ? v.seconds : 60; }
+    $('#watchnext').innerHTML = 'Keep watching? reads the TV\'s own Continue watching row. ' + (state.watchNext ? '<span class="ok">Permission granted.</span>' : '<span class="warn">Needs one line over ADB: adb shell pm grant app.departures.tv android.permission.READ_TV_LISTINGS</span>');
+    setSeg('flips', s.flips ? 'on' : 'off'); setSeg('bright', String(s.brightness)); if (!$('#bright span.on')) setSeg('bright', '1');
+    $('#quiet').classList.toggle('on', s.quiet.enabled); $('#qfrom').value = s.quiet.from; $('#qto').value = s.quiet.to;
+    const ss = s.screensaver; $('#sscur').textContent = ss.current; ssbtn.textContent = ss.ours ? 'Disable screensaver mode' : 'Enable screensaver mode'; if (ss.minutes > 0) ssmin.value = ss.minutes;
+    $('#ssgrant').hidden = ss.canSecure && ss.canSystem; $('#ssgrantlines').textContent = (ss.canSecure ? '' : ss.grantSecure + '\n') + (ss.canSystem ? '' : ss.grantSystem);
+  }
+
+  // ----- apply: content and settings together -----
+  $('#apply').addEventListener('click', async () => {
+    const btn = $('#apply'); btn.classList.add('busy');
+    try {
+      const content = { location: picked, clock24: segVal('clock') === '24', imperial: segVal('units') === 'f',
+        today: { mode: segVal('todayseg'), lines: $$('.tline').map(t => t.value) },
+        calendars: [...cals.children].map(d => ({ label: d.querySelector('.clabel').value, url: d.querySelector('.curl').value.trim(), saved: parseInt(d.dataset.saved, 10) })).filter(x => x.url || x.saved >= 0),
+        message: lines.map(l => l.value), markets: $$('.market').map(d => ({ symbol: d.querySelector('.sym').value.trim(), label: d.querySelector('.mlabel').value.trim() })).filter(m => m.symbol) };
+      const views = {}; for (const k of ['today', 'keep_watching', 'markets', 'message']) views[k] = { on: $('.vtoggle[data-k=' + k + ']').classList.contains('on'), seconds: parseInt($('select.secs[data-k=' + k + ']').value, 10) };
+      const settings = { views, flips: segVal('flips') === 'on', brightness: parseFloat(segVal('bright')), quiet: { enabled: $('#quiet').classList.contains('on'), from: $('#qfrom').value, to: $('#qto').value } };
+      await api('content', content); state = await api('settings', settings); render();
+      btn.textContent = 'APPLIED'; btn.classList.add('done'); setTimeout(() => { btn.classList.remove('done'); btn.textContent = 'APPLY'; }, 1600);
+    } catch (e) { toast('Could not reach the TV'); }
+    btn.classList.remove('busy');
+  });
+
+  let toastTimer = null;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
+})();
+</script>
+</body>
+</html>

@@ -14,18 +14,32 @@ public final class Faces {
     public static final class Event { public String title = ""; public String label = ""; public long startMs, endMs; public boolean allDay; }
     public static final class Resume { public String title = "", detail = "", app = ""; }
 
-    /** Row 1 date and time; rows 2 and 3 weather; rows 5 and 6 the next event with its countdown. */
-    public static Board now(long nowMs, boolean clock24, Weather w, Event e) { return now(nowMs, clock24, w, e, true, true); }
+    /** The Now face of the first builds, kept for the demo and tests: date, time, weather and the next event. */
+    public static Board now(long nowMs, boolean clock24, Weather w, Event e) {
+        Config c = new Config(); c.present = true; c.clock24 = clock24; c.latitude = 0; c.longitude = 0; c.calendars.add(new Config.Calendar("", "https://example.invalid"));
+        return today(nowMs, c, w, e, null, null);
+    }
 
-    /** hasLocation / hasCalendars false: a plain hint in place of the missing rows, for a TV with no configuration yet. */
-    public static Board now(long nowMs, boolean clock24, Weather w, Event e, boolean hasLocation, boolean hasCalendars) {
+    /**
+     * Today: row 1 the date and time; rows 2 and 3 the weather; rows 5 and 6 the next event with its countdown,
+     * or two lines of the owner's own. A TV with no configuration yet shows where to set it up instead.
+     */
+    public static Board today(long nowMs, Config cfg, Weather w, Event e, String setupAddress, String pairCode) {
         Board b = new Board();
         Date d = new Date(nowMs);
         String date = new SimpleDateFormat("EEE d MMM", Locale.US).format(d).toUpperCase(Locale.US);
-        String time = clock24 ? new SimpleDateFormat("HH:mm", Locale.US).format(d)
+        String time = cfg.clock24 ? new SimpleDateFormat("HH:mm", Locale.US).format(d)
                 : new SimpleDateFormat("h:mm a", Locale.US).format(d).replace("AM", " AM").replace("PM", " PM").replaceAll("  +", " ");
         b.text(0, 0, date);
         b.textRight(0, time);
+        if (!cfg.present) {
+            // Nothing of the owner's on this TV yet: the board itself says where to go.
+            b.chip(2, 0, Board.CHIP_BLUE); b.chip(3, 0, Board.CHIP_BLUE);
+            b.text(2, 2, "TO SET UP, OPEN");
+            b.text(3, 2, setupAddress == null ? "CONNECT THE TV TO WIFI" : setupAddress);
+            if (pairCode != null) b.text(5, 2, "CODE  " + pairCode);
+            return b;
+        }
         if (w != null) {
             String wx = w.now + "° " + w.condition;
             b.text(1, 0, wx);
@@ -33,27 +47,28 @@ public final class Faces {
             String hl = "HIGH " + w.high + "  LOW " + w.low;
             b.text(2, 0, hl);
             if (w.rain) b.textRight(2, "RAIN");
-        }
-        if (w == null && !hasLocation) { b.text(1, 0, "WEATHER: SET LOCATION"); b.text(2, 0, "IN CONFIG.JSON"); }
-        if (e == null && !hasCalendars) {
-            b.chip(4, 0, Board.CHIP_BLUE); b.chip(5, 0, Board.CHIP_BLUE);
-            b.text(4, 1, "ADD A CALENDAR LINK");
-            b.text(5, 1, "SEE THE README");
+        } else if (!cfg.hasLocation()) { b.text(1, 0, "WEATHER: SET LOCATION"); b.text(2, 0, "ON THE SETUP PAGE"); }
+        b.chip(4, 0, Board.CHIP_BLUE); b.chip(5, 0, Board.CHIP_BLUE);
+        if (cfg.todayMessage) {
+            writeRich(b, 4, 1, cfg.todayLine1);
+            writeRich(b, 5, 1, cfg.todayLine2);
         } else if (e != null) {
-            b.chip(4, 0, Board.CHIP_BLUE); b.chip(5, 0, Board.CHIP_BLUE);
             b.text(4, 1, fit(e.title, Board.COLS - 1));
             // Row 6: the time and countdown on the left, the calendar label on the right, never overlapping:
             // the label keeps its place and the countdown gives way (minutes first, then the whole countdown).
             String label = e.label == null ? "" : e.label.toUpperCase(Locale.US);
             int room = Board.COLS - 1 - (label.isEmpty() ? 0 : label.length() + 2);
-            String w5 = when(nowMs, e, clock24);
+            String w5 = when(nowMs, e, cfg.clock24);
             if (w5.length() > room) w5 = w5.replaceAll(" \\d+M$", "");
             if (w5.length() > room) w5 = w5.replaceAll("  IN .*$", "");
             b.text(5, 1, fit(w5, room));
             if (!label.isEmpty()) b.textRight(5, label);
+        } else if (cfg.calendars.isEmpty()) {
+            b.text(4, 1, "ADD A CALENDAR");
+            b.text(5, 1, "ON THE SETUP PAGE");
         } else {
-            b.chip(4, 0, Board.CHIP_BLUE); b.chip(5, 0, Board.CHIP_BLUE);
-            b.text(4, 1, "NOTHING ELSE TODAY");
+            b.text(4, 1, "NOTHING SCHEDULED");
+            b.text(5, 1, "TODAY :)");
         }
         return b;
     }
@@ -89,7 +104,6 @@ public final class Faces {
         return b;
     }
 
-
     /**
      * Markets: a header with the face's orange chip, then one row per asset: a green or red chip for the day's
      * direction, the label, the price and the change against the previous close (24 h for crypto).
@@ -116,6 +130,52 @@ public final class Faces {
         return b;
     }
 
+    /** Message: six lines of the owner's own, as typed on the setup page, chips and all. */
+    public static Board message(List<String> lines) {
+        Board b = new Board();
+        for (int r = 0; r < Board.ROWS && r < lines.size(); r++) writeRich(b, r, 0, lines.get(r));
+        return b;
+    }
+
+    /**
+     * Writes a line with its chips: {r} {o} {y} {g} {b} {v} {w} are colour chips, a colour emoji becomes the
+     * nearest chip, and anything the board has no flap for is left out rather than shown as a blank.
+     */
+    static void writeRich(Board b, int row, int col, String s) {
+        if (s == null) return;
+        String up = s.toUpperCase(Locale.US);
+        int c = col;
+        for (int i = 0; i < up.length() && c < Board.COLS; ) {
+            int cp = up.codePointAt(i);
+            int len = Character.charCount(cp);
+            if (cp == '{' && i + 2 < up.length() && up.charAt(i + 2) == '}') {
+                int k = "ROYGBVW".indexOf(up.charAt(i + 1));
+                if (k >= 0) { b.chip(row, c++, Board.CHIPS[k]); i += 3; continue; }
+            }
+            char chip = emojiChip(cp);
+            if (chip != 0) { b.chip(row, c++, chip); i += len; continue; }
+            if (cp > 0x24F) { i += len; continue; }   // emoji, variation selectors and the like: no flap, no cell
+            char ch = (char) cp;
+            if (Board.FLAPS.indexOf(ch) >= 0) b.set(row, c++, ch);
+            else if (ch == ' ' || Character.isWhitespace(ch)) b.set(row, c++, ' ');
+            i += len;   // other characters are dropped, not blanked
+        }
+    }
+
+    /** Hearts, squares and circles by colour, plus stars and the sun as yellow. 0 when the code point is not one. */
+    static char emojiChip(int cp) {
+        switch (cp) {
+            case 0x2764: case 0x1F7E5: case 0x1F534: return Board.CHIP_RED;
+            case 0x1F9E1: case 0x1F7E7: case 0x1F7E0: return Board.CHIP_ORANGE;
+            case 0x1F49B: case 0x1F7E8: case 0x1F7E1: case 0x2B50: case 0x1F31F: case 0x2600: return Board.CHIP_YELLOW;
+            case 0x1F49A: case 0x1F7E9: case 0x1F7E2: return Board.CHIP_GREEN;
+            case 0x1F499: case 0x1F7E6: case 0x1F535: return Board.CHIP_BLUE;
+            case 0x1F49C: case 0x1F7EA: case 0x1F7E3: return Board.CHIP_VIOLET;
+            case 0x1F90D: case 0x2B1C: case 0x26AA: return Board.CHIP_WHITE;
+            default: return 0;
+        }
+    }
+
     /** Clips to the width on a word boundary where it can, else hard. */
     static String fit(String s, int width) {
         if (s == null) return "";
@@ -126,7 +186,7 @@ public final class Faces {
 
     private static long tz(long ms) { return java.util.TimeZone.getDefault().getOffset(ms); }
 
-    // ----- samples, for the preview before data exists -----
+    // ----- samples, for the demo (--ez demo true) and documentation -----
 
     public static Weather sampleWeather() { Weather w = new Weather(); w.now = 12; w.high = 14; w.low = 8; w.condition = "PARTLY CLOUDY"; w.rain = true; return w; }
     public static Event sampleEvent(long nowMs) { Event e = new Event(); e.title = "Dinner with Sam"; e.label = "HOME"; e.startMs = nowMs + 72 * 60000L; e.endMs = e.startMs + 3600000L; return e; }
@@ -137,4 +197,5 @@ public final class Faces {
         return l;
     }
     public static Resume sampleResume() { Resume r = new Resume(); r.title = "Kim's Convenience"; r.detail = "S3E6   11 min left"; r.app = "Netflix"; return r; }
+    public static List<String> sampleMessage() { return List.of("{g} BACK AT 6", "", "DINNER IS IN THE OVEN", "{o} 180 FOR 40 MIN", "", "{r}{r}{r} LOVE YOU {r}{r}{r}"); }
 }

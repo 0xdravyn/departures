@@ -14,6 +14,7 @@ import java.util.Calendar;
 public final class DeparturesDream extends DreamService implements Data.Listener {
     private final Handler ui = new Handler(Looper.getMainLooper());
     private final FaceCycle cycle = new FaceCycle();
+    private final Runnable reloader = this::reload;
     private BoardView view;
     private Config cfg;
     private Data data;
@@ -29,16 +30,26 @@ public final class DeparturesDream extends DreamService implements Data.Listener
         view = new BoardView(this);
         view.setFlips(cfg.flips);
         setContentView(view);
-        view.setBoard(Faces.now(System.currentTimeMillis(), cfg.clock24, null, null));
-        applyQuiet();
         data = new Data(this, cfg, this);
-        if (!cfg.nowOn) cycle.next(data, cfg);   // Now switched off in settings: start on a view that is on
+        view.setBoard(Faces.today(System.currentTimeMillis(), cfg, null, null, SetupServer.addressLine(), data.pairCode));
+        applyQuiet();
+        if (!cfg.todayOn) cycle.next(data, cfg);   // Today switched off in settings: start on a view that is on
         data.start();
+        SetupServer.get(this).retain(); SetupServer.onChange = reloader;
         ui.postDelayed(rotate, cycle.delayMs(cfg));
         ui.postDelayed(minute, msToNextMinute());
     }
 
-    @Override public void onDetachedFromWindow() { ui.removeCallbacksAndMessages(null); if (data != null) data.stop(); super.onDetachedFromWindow(); }
+    @Override public void onDetachedFromWindow() { if (SetupServer.onChange == reloader) SetupServer.onChange = null; SetupServer.get(this).release(); ui.removeCallbacksAndMessages(null); if (data != null) data.stop(); super.onDetachedFromWindow(); }
+
+    /** The setup page applied something: re-read everything and show it at once. */
+    private void reload() {
+        if (view == null) return;
+        cfg = Config.load(this); view.setFlips(cfg.flips);
+        if (data != null) data.stop(); data = new Data(this, cfg, this); data.start();
+        if (!cfg.viewOn(cycle.face)) cycle.next(data, cfg);
+        applyQuiet(); show(true);
+    }
 
     @Override public void onData(Data d) { if (view != null) show(view.getWidth() > 0); }
 

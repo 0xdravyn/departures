@@ -24,11 +24,13 @@ import java.util.List;
  * leave. One row per view: how long it stays before the next, or Off to drop it from the rotation (at least one view
  * stays on). Stored in private preferences and read by both the board app and the screensaver, so one change
  * covers both. Reached by holding OK on the board, from the Menu button, or from the TV's Screen saver settings.
- * What needs typing (coordinates, calendar addresses, the market list) stays in config.json.
+ * What needs typing (your city, calendar addresses, the custom message, the market list) is done on the setup
+ * page from a computer; the first row says where it is.
  */
 public final class SettingsActivity extends Activity {
     private static final int[] SECONDS = {15, 30, 60, 120, 300, 600};
     private static final float[] BRIGHTNESS = {1f, 0.8f, 0.6f, 0.4f};
+    private static final String[] VIEW_KEYS = {"today", "keep_watching", "markets", "message"};
 
     private SharedPreferences prefs;
     private Config cfg;
@@ -73,35 +75,44 @@ public final class SettingsActivity extends Activity {
         });
         list.setOnItemClickListener((p, v, pos, id) -> { rows.get(pos).step(1); refresh(); });
         list.requestFocus();
-        list.setSelectionFromTop(1, dp(56));   // first real row selected, the VIEWS heading still visible above it
+        list.setSelectionFromTop(1, dp(56));   // first real row selected, the heading still visible above it
     }
+
+    @Override protected void onStart() { super.onStart(); SetupServer.get(this).retain(); }
+    @Override protected void onStop() { SetupServer.get(this).release(); super.onStop(); }
 
     private static final class Heading extends Row { Heading(String t) { super(t); } String value() { return ""; } void step(int d) {} }
 
     /** The footer: Han's line, plus the two ADB grants when the screensaver rows are locked. */
     private String screensaverHint() {
         String s = "Press Back to save. Changes also apply to the screensaver mode.";
-        if (!canSecure() || !canSystem()) s += "  Screensaver rows unlock after, over ADB:  adb shell pm grant app.departures.tv android.permission.WRITE_SECURE_SETTINGS  and  adb shell appops set app.departures.tv WRITE_SETTINGS allow";
+        if (!Screensaver.canSecure(this) || !Screensaver.canSystem(this)) s += "  Screensaver rows unlock after, over ADB:  " + Screensaver.GRANT_SECURE + "  and  " + Screensaver.GRANT_SYSTEM;
         return s;
     }
 
     private String status() {
         StringBuilder s = new StringBuilder();
-        s.append(cfg.present ? "Configuration imported" : "No configuration yet (push config.json over ADB)");
+        s.append(cfg.present ? "Set up" : "Nothing set up yet: open the address below on a computer");
         if (cfg.present) {
             s.append("  ·  ").append(cfg.calendars.size()).append(cfg.calendars.size() == 1 ? " calendar" : " calendars");
             s.append("  ·  ").append(cfg.hasLocation() ? (cfg.locationName.isEmpty() ? "location set" : cfg.locationName) : "no location");
-            s.append("  ·  ").append(cfg.markets.isEmpty() ? "markets off in config" : cfg.markets.size() + " markets");
+            s.append("  ·  ").append(cfg.markets.isEmpty() ? "no markets" : cfg.markets.size() + " markets");
         }
         return s.toString();
     }
 
     private void buildRows() {
         rows.clear();
+        rows.add(new Heading("SET UP  (your city, calendars, custom message, markets)"));
+        rows.add(new Row("Open this address on a computer on the same Wi-Fi") {
+            String value() { String a = SetupServer.addressLine(); return (a == null ? "TV is not on Wi-Fi" : "http://" + a) + "    code " + Config.pairCode(SettingsActivity.this); }
+            void step(int d) { Config.newPairCode(SettingsActivity.this); Toast.makeText(SettingsActivity.this, "New code. Devices that were connected before will ask for it again.", Toast.LENGTH_LONG).show(); }
+        });
         rows.add(new Heading("VIEWS"));
-        rows.add(view("Now  (date, time, weather, next event)", "now", 60));
+        rows.add(view("Today  (date, time, weather, next event or your note)", "today", 60));
         rows.add(view("Keep watching?  (what you were watching)", "keep_watching", 30));
         rows.add(view("Markets  (prices and the day's change)", "markets", 60));
+        rows.add(view("Custom message  (your own board)", "message", 30));
         rows.add(new Heading("BOARD"));
         rows.add(new Row("Flip animation") {
             String value() { return prefs.getBoolean("flips", true) ? "On" : "Off, changes appear at once"; }
@@ -126,41 +137,24 @@ public final class SettingsActivity extends Activity {
         });
         rows.add(time("From", "quiet_from", cfg.quietFromMin));
         rows.add(time("Until", "quiet_to", cfg.quietToMin));
-        rows.add(new Heading("SCREENSAVER  (the TV's own page does not list third-party screensavers)"));
-        rows.add(new Row("TV screensaver") {
-            String value() {
-                String cur = android.provider.Settings.Secure.getString(getContentResolver(), "screensaver_components");
-                boolean ours = cur != null && cur.contains("app.departures.tv");
-                return canSecure() ? (ours ? "Departures" : "TV default") : (ours ? "Departures  (locked, see below)" : "TV default  (locked, see below)");
-            }
-            void step(int d) {
-                if (!canSecure()) { Toast.makeText(SettingsActivity.this, "Grant WRITE_SECURE_SETTINGS over ADB first (see README)", Toast.LENGTH_LONG).show(); return; }
-                String cur = android.provider.Settings.Secure.getString(getContentResolver(), "screensaver_components");
-                boolean ours = cur != null && cur.contains("app.departures.tv");
-                if (ours) { String prev = prefs.getString("previous_screensaver", ""); android.provider.Settings.Secure.putString(getContentResolver(), "screensaver_components", prev.isEmpty() ? "com.google.android.apps.tv.dreamx/.service.Backdrop" : prev); }
-                else {
-                    if (cur != null && !cur.isEmpty()) prefs.edit().putString("previous_screensaver", cur).apply();
-                    android.provider.Settings.Secure.putString(getContentResolver(), "screensaver_components", "app.departures.tv/.DeparturesDream");
-                    android.provider.Settings.Secure.putInt(getContentResolver(), "screensaver_enabled", 1);
-                    // a sensible start: two minutes idle, unless the TV is already quicker
-                    try { if (canSystem() && android.provider.Settings.System.getInt(getContentResolver(), android.provider.Settings.System.SCREEN_OFF_TIMEOUT) > 120000) android.provider.Settings.System.putInt(getContentResolver(), android.provider.Settings.System.SCREEN_OFF_TIMEOUT, 120000); } catch (Exception ignored) {}
-                }
-            }
+        rows.add(new Heading("SCREENSAVER MODE  (starts the board by itself when the TV sits idle)"));
+        rows.add(new Row("Screensaver mode") {
+            String value() { boolean ours = Screensaver.isOurs(SettingsActivity.this); String s = ours ? "Enabled" : "Off, TV screensaver: " + Screensaver.currentName(SettingsActivity.this); return Screensaver.canSecure(SettingsActivity.this) ? s : s + "  (locked, see below)"; }
+            void step(int d) { String err = Screensaver.enable(SettingsActivity.this, !Screensaver.isOurs(SettingsActivity.this)); if (err != null) Toast.makeText(SettingsActivity.this, err, Toast.LENGTH_LONG).show(); }
         });
         rows.add(new Row("Start after the TV idles for") {
-            int[] mins = {1, 2, 5, 10, 15, 30};
-            int current() { try { return (int) Math.round(android.provider.Settings.System.getInt(getContentResolver(), android.provider.Settings.System.SCREEN_OFF_TIMEOUT) / 60000.0); } catch (Exception e) { return -1; } }
-            String value() { int m = current(); String s = m < 0 ? "unknown" : m + (m == 1 ? " minute" : " minutes"); return canSystem() ? s : s + "  (locked, see below)"; }
+            final int[] mins = {1, 2, 5, 10, 15, 30};
+            String value() { int m = Screensaver.minutes(SettingsActivity.this); String s = m < 0 ? "unknown" : m + (m == 1 ? " minute" : " minutes"); return Screensaver.canSystem(SettingsActivity.this) ? s : s + "  (locked, see below)"; }
             void step(int d) {
-                if (!canSystem()) { Toast.makeText(SettingsActivity.this, "Grant WRITE_SETTINGS over ADB first (see README)", Toast.LENGTH_LONG).show(); return; }
-                int m = current(), i = 1; for (int k = 0; k < mins.length; k++) if (mins[k] == m) i = k;
-                android.provider.Settings.System.putInt(getContentResolver(), android.provider.Settings.System.SCREEN_OFF_TIMEOUT, mins[Math.floorMod(i + d, mins.length)] * 60000);
+                int m = Screensaver.minutes(SettingsActivity.this), i = 1; for (int k = 0; k < mins.length; k++) if (mins[k] == m) i = k;
+                String err = Screensaver.setMinutes(SettingsActivity.this, mins[Math.floorMod(i + d, mins.length)]);
+                if (err != null) Toast.makeText(SettingsActivity.this, err, Toast.LENGTH_LONG).show();
             }
         });
         rows.add(new Heading(""));
         rows.add(new Row("Reset these settings") {
             String value() { return ""; }
-            void step(int d) { prefs.edit().clear().apply(); cfg = Config.load(SettingsActivity.this); Toast.makeText(SettingsActivity.this, "Settings reset", Toast.LENGTH_SHORT).show(); }
+            void step(int d) { Config.resetSettings(SettingsActivity.this); cfg = Config.load(SettingsActivity.this); Toast.makeText(SettingsActivity.this, "Settings reset", Toast.LENGTH_SHORT).show(); }
         });
     }
 
@@ -175,7 +169,7 @@ public final class SettingsActivity extends Activity {
                 int i = on() ? 1 + indexOf(secs()) : 0;
                 int n = Math.floorMod(i + d, SECONDS.length + 1);
                 if (n == 0) {
-                    int othersOn = (prefs.getBoolean("now_on", true) ? 1 : 0) + (prefs.getBoolean("keep_watching_on", true) ? 1 : 0) + (prefs.getBoolean("markets_on", true) ? 1 : 0) - (on() ? 1 : 0);
+                    int othersOn = 0; for (String k : VIEW_KEYS) if (!k.equals(key) && prefs.getBoolean(k + "_on", true)) othersOn++;
                     if (othersOn == 0) { Toast.makeText(SettingsActivity.this, "Keep at least one view on", Toast.LENGTH_SHORT).show(); return; }
                     prefs.edit().putBoolean(key + "_on", false).apply();
                 } else prefs.edit().putBoolean(key + "_on", true).putInt(key + "_seconds", SECONDS[n - 1]).apply();
@@ -190,9 +184,6 @@ public final class SettingsActivity extends Activity {
             void step(int d) { int m = prefs.getInt(key, dflt); prefs.edit().putInt(key, Math.floorMod(m + 30 * d, 24 * 60)).apply(); }
         };
     }
-
-    private boolean canSecure() { return checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS") == android.content.pm.PackageManager.PERMISSION_GRANTED; }
-    private boolean canSystem() { return android.provider.Settings.System.canWrite(this); }
 
     private void refresh() { ((ArrayAdapter<?>) list.getAdapter()).notifyDataSetChanged(); }
 

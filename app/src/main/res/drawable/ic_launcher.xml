@@ -1,0 +1,5 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="100" android:viewportHeight="100">
+    <!-- The mark: one flap on true black. -->
+    <path android:fillColor="#000000" android:pathData="M0,0h100v100h-100z"/>
+    <path android:fillColor="#EFE9DC" android:pathData="M28,14 h44 a10,10 0 0 1 10,10 v24.5 h-64 v-24.5 a10,10 0 0 1 10,-10 z M18,51.5 h64 v24.5 a10,10 0 0 1 -10,10 h-44 a10,10 0 0 1 -10,-10 z"/>
+</vector>

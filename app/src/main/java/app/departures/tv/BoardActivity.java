@@ -17,12 +17,14 @@ import java.util.Calendar;
  * that off in the TV's settings for all-day use.) Same faces, rotation and quiet hours as the screensaver.
  *
  * Remote: Left/Right jump between faces and pause the rotation for two minutes, OK redraws, holding OK (or the
- * Menu button) opens Settings, Down/Up preview the quiet-hours dim, Back leaves. Without a configuration it shows sample data, so a fresh install has something to look at.
+ * Menu button) opens Settings, Down/Up preview the quiet-hours dim, Back leaves. While it is on screen the setup
+ * page is served (SetupServer), and a change made there is applied at once.
  */
 public final class BoardActivity extends Activity implements Data.Listener {
     private static final long MANUAL_PAUSE_MS = 2 * 60_000L;
     private final Handler ui = new Handler(Looper.getMainLooper());
     private final FaceCycle cycle = new FaceCycle();
+    private final Runnable reloader = this::reload;
     private BoardView view;
     private Config cfg;
     private Data data;
@@ -46,17 +48,19 @@ public final class BoardActivity extends Activity implements Data.Listener {
         root.addView(view, new android.widget.FrameLayout.LayoutParams(-1, -1));
         root.addView(hintView(), new android.widget.FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
-        if (!cfg.nowOn) cycle.set(nextOn(FaceCycle.MARKETS));
+        if (!cfg.todayOn) cycle.set(nextOn(FaceCycle.MESSAGE));
         // Demo mode (adb shell am start -n app.departures.tv/.BoardActivity --ez demo true): sample data only,
         // for screenshots and documentation that must not show anyone's real calendar.
         boolean demo = getIntent() != null && getIntent().getBooleanExtra("demo", false);
-        if (!demo) { data = new Data(this, cfg, this); view.setBoard(Faces.now(System.currentTimeMillis(), cfg.clock24, null, null, cfg.hasLocation(), !cfg.calendars.isEmpty())); data.start(); }
+        if (!demo) { data = new Data(this, cfg, this); view.setBoard(Faces.today(System.currentTimeMillis(), cfg, null, null, SetupServer.addressLine(), data.pairCode)); data.start(); }
         else view.setBoard(sample());
         applyQuiet();
         ui.postDelayed(rotate, cycle.delayMs(cfg));
         ui.postDelayed(minute, DeparturesDream.msToNextMinute());
     }
 
+    @Override protected void onStart() { super.onStart(); SetupServer.get(this).retain(); SetupServer.onChange = reloader; }
+    @Override protected void onStop() { if (SetupServer.onChange == reloader) SetupServer.onChange = null; SetupServer.get(this).release(); super.onStop(); }
     @Override protected void onDestroy() { ui.removeCallbacksAndMessages(null); if (data != null) data.stop(); super.onDestroy(); }
 
     @Override public void onData(Data d) { show(view.getWidth() > 0); }
@@ -65,6 +69,7 @@ public final class BoardActivity extends Activity implements Data.Listener {
         long now = System.currentTimeMillis();
         if (cycle.face == FaceCycle.KEEP_WATCHING) return Faces.keepWatching(Faces.sampleResume());
         if (cycle.face == FaceCycle.MARKETS) return Faces.markets(Faces.sampleQuotes(), now, false);
+        if (cycle.face == FaceCycle.MESSAGE) return Faces.message(Faces.sampleMessage());
         return Faces.now(now, false, Faces.sampleWeather(), Faces.sampleEvent(now));
     }
 
@@ -79,8 +84,8 @@ public final class BoardActivity extends Activity implements Data.Listener {
     }
 
     /** The next view that is switched on, after this one (wrapping); the same one if it is the only one on. */
-    private int nextOn(int from) { for (int i = 1; i <= 3; i++) { int f = (from + i) % 3; if (cfg.viewOn(f)) return f; } return from; }
-    private int prevOn(int from) { for (int i = 1; i <= 3; i++) { int f = ((from - i) % 3 + 3) % 3; if (cfg.viewOn(f)) return f; } return from; }
+    private int nextOn(int from) { for (int i = 1; i <= FaceCycle.FACES; i++) { int f = (from + i) % FaceCycle.FACES; if (cfg.viewOn(f)) return f; } return from; }
+    private int prevOn(int from) { for (int i = 1; i <= FaceCycle.FACES; i++) { int f = Math.floorMod(from - i, FaceCycle.FACES); if (cfg.viewOn(f)) return f; } return from; }
 
     private void manual(int delta) {
         manualUntil = System.currentTimeMillis() + MANUAL_PAUSE_MS;
@@ -113,13 +118,16 @@ public final class BoardActivity extends Activity implements Data.Listener {
 
     private void openSettings() { startActivity(new android.content.Intent(this, SettingsActivity.class)); }
 
-    /** Back from Settings: re-read the choices and apply them at once. */
-    @Override protected void onResume() {
-        super.onResume();
-        Config fresh = Config.load(this);
-        boolean changed = cfg != null && (fresh.nowOn != cfg.nowOn || fresh.keepWatchingOn != cfg.keepWatchingOn || fresh.marketsOn != cfg.marketsOn || fresh.clock24 != cfg.clock24 || fresh.quietEnabled != cfg.quietEnabled || fresh.quietFromMin != cfg.quietFromMin || fresh.quietToMin != cfg.quietToMin || fresh.brightness != cfg.brightness || fresh.flips != cfg.flips || fresh.nowSeconds != cfg.nowSeconds || fresh.marketsSeconds != cfg.marketsSeconds || fresh.keepWatchingSeconds != cfg.keepWatchingSeconds || fresh.imperial != cfg.imperial);
-        cfg = fresh;
-        if (changed) { view.setFlips(cfg.flips); if (!cfg.viewOn(cycle.face)) cycle.set(nextOn(cycle.face)); manualUntil = 0; applyQuiet(); show(true); }
+    /** Back from Settings, or the setup page applied something: re-read everything and show it at once. */
+    @Override protected void onResume() { super.onResume(); reload(); }
+
+    private void reload() {
+        if (view == null) return;
+        cfg = Config.load(this);
+        view.setFlips(cfg.flips);
+        if (data != null) { data.stop(); data = new Data(this, cfg, this); data.start(); }
+        if (!cfg.viewOn(cycle.face)) cycle.set(nextOn(cycle.face));
+        manualUntil = 0; applyQuiet(); show(true);
     }
 
     @Override public boolean onKeyDown(int code, KeyEvent e) {

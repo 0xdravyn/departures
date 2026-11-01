@@ -4,11 +4,11 @@ Paste this into Claude Code, Codex or another coding assistant with shell access
 
 Before you start, on the TV: Settings → System → About → press OK on "Android TV OS build" (or "Build") 7 times, then back → Developer options → turn on USB debugging. Keep the TV on and awake.
 
-Have ready: your city's latitude and longitude, and the **secret iCal address** of each calendar you want on the board (Google Calendar on the web → Settings → the calendar → Integrate calendar → "Secret address in iCal format"; it contains `/private-`). Paste those into the config file the assistant writes, not into the chat.
+You do not need to give the assistant anything personal. Your city, calendars and markets go in afterwards on a web page the TV serves on your Wi-Fi; the assistant never sees a calendar address.
 
 ---
 
-I want to install Departures, a split-flap departure board screensaver, on my Android TV from https://github.com/0xdravyn/departures. Work on the real device step by step, verify with screenshots pulled from the TV, and ask me before anything that depends on my preferences. Never print, log or repeat my calendar addresses.
+I want to install Departures, a split-flap departure board screensaver, on my Android TV from https://github.com/0xdravyn/departures. Work on the real device step by step, verify with screenshots pulled from the TV, and ask me before anything that depends on my preferences. The configuration is mine to do on the TV's setup page afterwards; do not ask me for calendar addresses or paste any into the chat.
 
 Get the code
 - Clone the repository if it is not in the working folder: `git clone https://github.com/0xdravyn/departures` and work from it.
@@ -22,21 +22,15 @@ Build or take the APK
 - If a release APK is in the repository's Releases page, prefer it; otherwise build with JDK 17 and the Android SDK: `./gradlew assembleRelease` (it signs with the debug key, which is fine for one TV). Tell me what you had to install on this computer.
 - `adb install -r app/build/outputs/apk/release/app-release.apk`, then confirm `adb shell dumpsys package app.departures.tv` shows `User 0: ... installed=true`; if not, `adb shell pm install-existing --user 0 app.departures.tv` (a TV with a second profile keeps per-user install state, and the app, its screensaver and its import stay invisible otherwise).
 
-Configure
-- Copy `config.example.json` to `config.json` (it is git-ignored). Fill in my coordinates, units, 12h or 24h clock and quiet hours after asking me; leave the calendar lines for me to paste in, then wait until I say the file is saved.
-- Check each calendar address only by its shape and by fetching it: report "ok" or the HTTP status, never the address. A `/public/` address returns 404 for a private calendar; the secret one has `/private-` in it.
-- Push and import: `adb push config.json /data/local/tmp/departures-config.json`, `adb shell am start -n app.departures.tv/.ImportActivity`, then `adb shell rm /data/local/tmp/departures-config.json`. Confirm the import toast or the "configuration imported" log line.
-- If I want the Keep watching face: `adb shell pm grant app.departures.tv android.permission.READ_TV_LISTINGS`.
+Grant the three permissions it cannot ask for itself
+- `adb shell pm grant app.departures.tv android.permission.READ_TV_LISTINGS` (the Keep watching? view).
+- `adb shell pm grant app.departures.tv android.permission.WRITE_SECURE_SETTINGS` and `adb shell appops set app.departures.tv WRITE_SETTINGS allow` (screensaver mode; Google TV's own Screen saver page does not list third-party screensavers).
 
-Verify
-- Open the board as an app: `adb shell am start -n app.departures.tv/.BoardActivity`, wait 10 seconds, pull a screenshot (`adb shell screencap -p /data/local/tmp/d.png`, `adb pull`), and show me. Check the weather is for my city and the next event is real. Press Right (`adb shell input keyevent KEYCODE_DPAD_RIGHT`) and screenshot the Keep watching face.
+Verify and hand over
+- Open the board: `adb shell am start -n app.departures.tv/.BoardActivity`, wait 10 seconds, pull a screenshot (`adb shell screencap -p /data/local/tmp/d.png`, `adb pull`), and show me. A TV with nothing set up shows "TO SET UP, OPEN", an address and a four-digit code on the board.
 - If the screen is black, the TV is probably asleep: `adb shell input keyevent KEYCODE_WAKEUP` and try again.
 - Read `adb logcat -d -s Departures` and explain any warning to me in plain words.
-
-Make it the screensaver
-- Grant the two settings permissions so the app's own Settings screen can control this later: `adb shell pm grant app.departures.tv android.permission.WRITE_SECURE_SETTINGS` and `adb shell appops set app.departures.tv WRITE_SETTINGS allow`. (Google TV's own Screen saver page does not list third-party screensavers.)
-- `adb shell settings put secure screensaver_components app.departures.tv/.DeparturesDream`, and tell me the TV's idle timer (`adb shell settings get system screen_off_timeout`, in milliseconds); offer to set it to 120000 for two minutes.
-- Start it once to prove it: `adb shell am start -n com.android.systemui/.Somnambulator`, wait 10 seconds, screenshot, then `adb shell input keyevent KEYCODE_HOME`.
+- Tell me the address and code from the screenshot and open the address in my browser. From here I fill in the Content tab (city, calendars, message, markets), hit Apply, and on the Settings tab enable screensaver mode if I want it. The page also works later from any computer on the Wi-Fi while Departures is on the TV screen.
 - Tell me to switch USB debugging back off on the TV when we are done.
 
 Undo, if I ask
