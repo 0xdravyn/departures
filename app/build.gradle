@@ -21,4 +21,5 @@ android {
         signingConfig ks.storeFile ? signingConfigs.release : signingConfigs.debug
     } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    applicationVariants.all { variant -> variant.outputs.all { outputFileName = "departures-v${variant.versionName}.apk" } }
 }

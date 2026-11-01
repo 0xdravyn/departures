@@ -21,7 +21,7 @@ final class Data {
     volatile List<Faces.Event> events = Collections.emptyList();
     volatile Faces.Resume resume;
     volatile List<Markets.Quote> quotes = Collections.emptyList();
-    /** Where the setup page is ("192.0.2.10:8787"), for the board of a TV with nothing configured yet; null off Wi-Fi. */
+    /** Where the settings page is ("192.0.2.10:8787"), for the board of a TV with nothing configured yet; null off Wi-Fi. */
     volatile String setupAddress;
     final String pairCode;
 

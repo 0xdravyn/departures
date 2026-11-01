@@ -8,7 +8,7 @@ You do not need to give the assistant anything personal. Your city, calendars an
 
 ---
 
-I want to install Departures, a split-flap departure board screensaver, on my Android TV from https://github.com/0xdravyn/departures. Work on the real device step by step, verify with screenshots pulled from the TV, and ask me before anything that depends on my preferences. The configuration is mine to do on the TV's setup page afterwards; do not ask me for calendar addresses or paste any into the chat.
+I want to install Departures, a split-flap departure board screensaver, on my Android TV from https://github.com/0xdravyn/departures. Work on the real device step by step, verify with screenshots pulled from the TV, and ask me before anything that depends on my preferences. The configuration is mine to do on the TV's settings page afterwards; do not ask me for calendar addresses or paste any into the chat.
 
 Get the code
 - Clone the repository if it is not in the working folder: `git clone https://github.com/0xdravyn/departures` and work from it.

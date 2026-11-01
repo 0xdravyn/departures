@@ -15,7 +15,7 @@ import java.util.Locale;
 
 /**
  * The configuration. Content (where you are, calendars, the message, markets) lives in the app's private
- * files/config.json, written by the setup page served from the TV (SetupServer) or imported over ADB
+ * files/config.json, written by the settings page served from the TV (SetupServer) or imported over ADB
  * (ImportActivity, config.example.json). Settings (which views, how long, animation, quiet hours) live in private
  * preferences, set on the TV (SettingsActivity) or from the same page. Every field has a default so a missing or
  * partial file still gives a working board. Calendar addresses are the only secret and are never logged or
@@ -102,7 +102,7 @@ public final class Config {
         return overlay(ctx, c);
     }
 
-    /** Choices made on the TV or the setup page win over config.json; both the app and the screensaver read them. */
+    /** Choices made on the TV or the settings page win over config.json; both the app and the screensaver read them. */
     private static Config overlay(Context ctx, Config c) {
         SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         c.todayOn = p.getBoolean("today_on", true); c.keepWatchingOn = p.getBoolean("keep_watching_on", true); c.marketsOn = p.getBoolean("markets_on", true); c.messageOn = p.getBoolean("message_on", true);
@@ -122,7 +122,7 @@ public final class Config {
     }
 
     /**
-     * Writes the content the setup page sent. A calendar entry without a url keeps the address of the saved entry
+     * Writes the content the settings page sent. A calendar entry without a url keeps the address of the saved entry
      * it came from ("saved": its index in the last state), so the page never has to hold or resend a secret. Caches that depend on the content
      * are dropped so the board refreshes at once.
      */
@@ -166,7 +166,7 @@ public final class Config {
         out.put("calendar", new JSONObject().put("lookahead_days", old.lookaheadDays));
         Files.write(file(ctx).toPath(), out.toString(2).getBytes(StandardCharsets.UTF_8));
         dropCaches(ctx);
-        android.util.Log.i("Departures", "content saved from the setup page");
+        android.util.Log.i("Departures", "content saved from the settings page");
     }
 
     /** Back to a TV with nothing of yours on it: config.json and every cache gone. Settings stay. */
@@ -189,7 +189,7 @@ public final class Config {
         if (all != null) for (File f : all) if (f.getName().startsWith("cal-")) f.delete();
     }
 
-    /** The four-digit code the setup page asks for, shown on the TV. Made once, kept until "New code". */
+    /** The four-digit code the settings page asks for, shown on the TV. Made once, kept until "New code". */
     static String pairCode(Context ctx) {
         SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         String code = p.getString("pair_code", null);

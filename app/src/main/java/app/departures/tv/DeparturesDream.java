@@ -42,7 +42,7 @@ public final class DeparturesDream extends DreamService implements Data.Listener
 
     @Override public void onDetachedFromWindow() { if (SetupServer.onChange == reloader) SetupServer.onChange = null; SetupServer.get(this).release(); ui.removeCallbacksAndMessages(null); if (data != null) data.stop(); super.onDetachedFromWindow(); }
 
-    /** The setup page applied something: re-read everything and show it at once. */
+    /** The settings page applied something: re-read everything and show it at once. */
     private void reload() {
         if (view == null) return;
         cfg = Config.load(this); view.setFlips(cfg.flips); view.setScatter(cfg.scatter);

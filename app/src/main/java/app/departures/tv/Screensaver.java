@@ -7,7 +7,7 @@ import android.provider.Settings;
  * Screensaver mode: Departures as the TV's screensaver, and the idle delay before it starts. Google TV's own
  * Screen saver page does not list third-party screensavers, so this writes the two system settings itself,
  * which needs WRITE_SECURE_SETTINGS and WRITE_SETTINGS granted once over ADB (README, Setup step 5). Used by the
- * settings screen on the TV and by the setup page, so both behave the same.
+ * settings screen on the TV and by the settings page, so both behave the same.
  */
 final class Screensaver {
     static final String OURS = "app.departures.tv/.DeparturesDream";

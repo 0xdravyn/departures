@@ -103,7 +103,7 @@ public final class SettingsActivity extends Activity {
 
     private void buildRows() {
         rows.clear();
-        rows.add(new Heading("SET UP  (your city, calendars, custom message, markets)"));
+        rows.add(new Heading("SETTINGS PAGE  (your city, calendars, custom message, markets)"));
         rows.add(new Row("Open this address on a computer on the same Wi-Fi") {
             String value() { String a = SetupServer.addressLine(); return (a == null ? "TV is not on Wi-Fi" : "http://" + a) + "    code " + Config.pairCode(SettingsActivity.this); }
             void step(int d) { Config.newPairCode(SettingsActivity.this); Toast.makeText(SettingsActivity.this, "New code. Devices that were connected before will ask for it again.", Toast.LENGTH_LONG).show(); }

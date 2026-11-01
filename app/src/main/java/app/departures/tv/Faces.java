@@ -52,7 +52,7 @@ public final class Faces {
             String hl = "HIGH " + w.high + "°  LOW " + w.low + "°";
             b.text(2, 0, hl);
             if (w.rain && hl.length() + 1 <= Board.COLS - 4) b.textRight(2, "RAIN");
-        } else if (!cfg.hasLocation()) { b.text(1, 0, "WEATHER: SET LOCATION"); b.text(2, 0, "ON THE SETUP PAGE"); }
+        } else if (!cfg.hasLocation()) { b.text(1, 0, "WEATHER: SET LOCATION"); b.text(2, 0, "ON THE SETTINGS PAGE"); }
         b.chip(4, 0, Board.CHIP_BLUE); b.chip(5, 0, Board.CHIP_BLUE);
         if (cfg.todayMessage) {
             writeRich(b, 4, 1, cfg.todayLine1);
@@ -72,7 +72,7 @@ public final class Faces {
             if (!label.isEmpty()) b.textRight(5, label);
         } else if (cfg.calendars.isEmpty()) {
             b.text(4, 1, "ADD A CALENDAR");
-            b.text(5, 1, "ON THE SETUP PAGE");
+            b.text(5, 1, "ON THE SETTINGS PAGE");
         } else {
             b.text(4, 1, "NOTHING SCHEDULED");
             b.text(5, 1, "TODAY :)");
@@ -141,7 +141,7 @@ public final class Faces {
         return b;
     }
 
-    /** Message: six lines of the owner's own, as typed on the setup page, chips and all. */
+    /** Message: six lines of the owner's own, as typed on the settings page, chips and all. */
     public static Board message(List<String> lines) {
         Board b = new Board();
         for (int r = 0; r < Board.ROWS && r < lines.size(); r++) writeRich(b, r, 0, lines.get(r));

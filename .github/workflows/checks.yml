@@ -22,4 +22,4 @@ jobs:
       - name: Build a release APK (debug-signed; no keystore in CI)
         run: ./gradlew assembleRelease -q --console=plain
       - uses: actions/upload-artifact@v4
-        with: { name: departures-apk, path: app/build/outputs/apk/release/app-release.apk }
+        with: { name: departures-apk, path: app/build/outputs/apk/release/departures-v*.apk }

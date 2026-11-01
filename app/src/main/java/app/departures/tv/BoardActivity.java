@@ -120,7 +120,7 @@ public final class BoardActivity extends Activity implements Data.Listener {
 
     private void openSettings() { startActivity(new android.content.Intent(this, SettingsActivity.class)); }
 
-    /** Back from Settings, or the setup page applied something: re-read everything and show it at once. */
+    /** Back from Settings, or the settings page applied something: re-read everything and show it at once. */
     @Override protected void onResume() { super.onResume(); reload(); }
 
     private void reload() {

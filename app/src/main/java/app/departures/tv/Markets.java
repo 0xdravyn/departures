@@ -57,7 +57,7 @@ final class Markets {
         return out;
     }
 
-    /** One instrument, looked up afresh with its name: what the setup page shows under each symbol. */
+    /** One instrument, looked up afresh with its name: what the settings page shows under each symbol. */
     static final class Lookup { boolean ok; String name = ""; double price, changePct; }
     static Lookup lookup(Config.Market m) {
         Lookup l = new Lookup();

@@ -23,7 +23,7 @@ import java.util.Enumeration;
 import java.util.Locale;
 
 /**
- * The setup page, served by the TV itself on the local network (http://<tv>:8787) while Departures is on
+ * The settings page, served by the TV itself on the local network (http://<tv>:8787) while Departures is on
  * screen (as the app or the screensaver). One HTML file from the assets, a small JSON API behind it. Every API call
  * carries the four-digit code shown on the TV; the TV checks it on each request, the page only shows the answer.
  * Calendar addresses go in and never come back out. No dependencies: a plain socket and a hand-written HTTP/1.0.
@@ -60,9 +60,9 @@ final class SetupServer {
             socket.setReuseAddress(true);
             Thread t = new Thread(this::accept, "departures-setup");
             t.setDaemon(true); t.start();
-            android.util.Log.i("Departures", "setup page on port " + PORT);
+            android.util.Log.i("Departures", "settings page on port " + PORT);
         } catch (Exception e) {
-            android.util.Log.w("Departures", "setup page could not start: " + e.getClass().getSimpleName());
+            android.util.Log.w("Departures", "settings page could not start: " + e.getClass().getSimpleName());
             socket = null;
         }
     }
@@ -71,7 +71,7 @@ final class SetupServer {
         if (socket == null) return;
         try { socket.close(); } catch (Exception ignored) {}
         socket = null;
-        android.util.Log.i("Departures", "setup page off");
+        android.util.Log.i("Departures", "settings page off");
     }
 
     private void accept() {
@@ -106,7 +106,7 @@ final class SetupServer {
             String path = target, query = "";
             int q = target.indexOf('?'); if (q >= 0) { path = target.substring(0, q); query = target.substring(q + 1); }
             if (code == null) code = param(query, "code");
-            if (method.equals("GET") && (path.equals("/") || path.equals("/index.html"))) { sendAsset(out, "setup.html", "text/html; charset=utf-8"); return; }
+            if (method.equals("GET") && (path.equals("/") || path.equals("/index.html"))) { sendAsset(out, "settings.html", "text/html; charset=utf-8"); return; }
             if (method.equals("GET") && path.equals("/logo.svg")) { sendAsset(out, "logo.svg", "image/svg+xml"); return; }
             if (!path.startsWith("/api/")) { send(out, 404, "text/plain", "not found"); return; }
             if (paused()) { send(out, 429, "application/json", "{\"error\":\"wait\"}"); return; }

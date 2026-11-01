@@ -24,7 +24,7 @@ git config core.hooksPath .githooks
 Views are the contribution this project most wants. One view is one small static method in `Faces.java` that fills a `Board` (22 by 6 cells: letters, digits, punctuation, the seven colour chips and the four weather glyphs), plus:
 
 1. a constant and a slot in the rotation in `FaceCycle.java`, with the rule for when the view has something to show;
-2. a row in `SettingsActivity.java` (on or off, seconds) and the matching entry in the setup page's Views section (`assets/setup.html`) and `SetupServer.state()`;
+2. a row in `SettingsActivity.java` (on or off, seconds) and the matching entry in the settings page's Views section (`assets/settings.html`) and `SetupServer.state()`;
 3. any new data in `Data.java`, fetched on the background thread, cached on disk, and never logged if it is personal;
 4. a README line and, if it needs a permission or a network source, a `SECURITY.md` line.
 
