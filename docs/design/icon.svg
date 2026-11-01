@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- App icon: the flap on true black. Android TV's round launcher row crops a circle from the centre, so the tile sits inside it. -->
-  <rect width="512" height="512" fill="#000"/>
-  <g transform="translate(56 56) scale(4)">
-    <path fill="#efe9dc" fill-rule="evenodd" d="M28 14 h44 a10 10 0 0 1 10 10 v24.5 h-64 v-24.5 a10 10 0 0 1 10 -10 z M18 51.5 h64 v24.5 a10 10 0 0 1 -10 10 h-44 a10 10 0 0 1 -10 -10 z"/>
-  </g>
-</svg>

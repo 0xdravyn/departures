@@ -2,7 +2,7 @@
 
 Thanks for looking. Departures is small on purpose: plain Java, no libraries, one board, a few faces. Good contributions keep it that way.
 
-**Before you start:** open an issue for anything bigger than a fix, so nobody builds the same thing twice. Faces, data sources and TV-specific quirks are all welcome; see `DESIGN.md` for what is planned and what was decided against.
+**Before you start:** open an issue for anything bigger than a fix, so nobody builds the same thing twice. Views, data sources and TV-specific quirks are all welcome. On the list already: a week view and a quotes view. Decided against, so no need to propose them: sound, scrolling text, and anything that shrinks the type to fit.
 
 **Setup:** JDK 17 and the Android SDK (platform 34). `./gradlew assembleRelease` builds a debug-signed APK; `adb install -r` it, then follow the README's setup. Enable the pre-commit hook once per clone so you cannot commit a calendar address by accident:
 

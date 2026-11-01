@@ -21,7 +21,7 @@
 | **To install it with a coding assistant** | [`PROMPT.md`](PROMPT.md): paste it into Claude Code or Codex and it installs the app for you |
 | **To install it by hand** | [Setup instructions](#setup-instructions): a few ADB lines, then a web page |
 | **To know what it reads and sends** | [Security](#security) and [`SECURITY.md`](SECURITY.md) |
-| **To change or extend it** | [`DESIGN.md`](DESIGN.md) for the decisions, [`CONTRIBUTING.md`](CONTRIBUTING.md) for the rules |
+| **To change or extend it** | [`CONTRIBUTING.md`](CONTRIBUTING.md): the rules, and how to add a view |
 
 ## What you get
 
@@ -95,7 +95,7 @@ Uninstalling removes the configuration with it. Nothing else on the TV was chang
 
 ## Contributing
 
-Issues and pull requests are welcome; [`CONTRIBUTING.md`](CONTRIBUTING.md) has the short rules: nothing personal in git, no new permissions without a README line, keep the board honest, test on a real TV. New views are the contribution this project most wants: one small Java class over a plain 22 by 6 grid, and [`DESIGN.md`](DESIGN.md) has the wish list.
+Issues and pull requests are welcome; [`CONTRIBUTING.md`](CONTRIBUTING.md) has the short rules: nothing personal in git, no new permissions without a README line, keep the board honest, test on a real TV. New views are the contribution this project most wants: one small method over a plain 22 by 6 grid, and a week view and a quotes view are already on the list.
 
 ## Support
 
